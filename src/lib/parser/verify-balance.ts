@@ -14,12 +14,38 @@ function formatCentsForMessage(cents: number): string {
 }
 
 /**
+ * Safaricom applies a transaction and its charge together, then prints the
+ * balance after both on BOTH rows. Adjacent rows sharing a receipt number and
+ * an identical balance are therefore one settlement event, and only the
+ * group's combined effect can be verified against that shared figure.
+ */
+function groupIntoSettlementEvents(transactions: Transaction[]): Transaction[][] {
+  const events: Transaction[][] = [];
+
+  for (const transaction of transactions) {
+    const currentEvent = events[events.length - 1];
+    const belongsToCurrent =
+      currentEvent !== undefined &&
+      currentEvent[0].receiptNo === transaction.receiptNo &&
+      currentEvent[0].balanceAfter === transaction.balanceAfter;
+
+    if (belongsToCurrent) {
+      currentEvent.push(transaction);
+    } else {
+      events.push([transaction]);
+    }
+  }
+
+  return events;
+}
+
+/**
  * Walks the running balance across the whole statement.
  *
- * Every row prints the balance after it was applied, so each row's balance
- * must equal the previous row's balance plus that row's effect. A break means
- * a row was dropped, misread, or misclassified as in/out — this is the
- * strongest correctness check available, because Safaricom supplies the answer.
+ * Each settlement event's printed balance must equal the previous balance plus
+ * the combined effect of every row in that event. A break means a row was
+ * dropped, misread, or misclassified as in/out — the strongest correctness
+ * check available, because Safaricom supplies the answer.
  *
  * Expects chronologically ordered transactions. `openingBalanceInCents` is the
  * balance before the first one.
@@ -31,27 +57,30 @@ export function verifyBalance(
   const issues: ParseIssue[] = [];
   let runningBalance = openingBalanceInCents;
 
-  for (const transaction of orderedTransactions) {
-    const expectedBalance = runningBalance + balanceDelta(transaction);
+  for (const event of groupIntoSettlementEvents(orderedTransactions)) {
+    const combinedDelta = event.reduce((total, tx) => total + balanceDelta(tx), 0);
+    const printedBalance = event[0].balanceAfter;
+    const expectedBalance = runningBalance + combinedDelta;
 
-    if (expectedBalance !== transaction.balanceAfter) {
-      const discrepancy = transaction.balanceAfter - expectedBalance;
+    if (expectedBalance !== printedBalance) {
+      const discrepancy = printedBalance - expectedBalance;
+      const rowCount = event.length > 1 ? ` (${event.length} rows settled together)` : '';
 
       issues.push({
         type: 'balance_break',
-        page: transaction.sourcePage,
-        rawText: transaction.detailsRaw,
+        page: event[0].sourcePage,
+        rawText: event[0].detailsRaw,
         detail:
-          `Balance break at receipt ${transaction.receiptNo}: ` +
+          `Balance break at receipt ${event[0].receiptNo}${rowCount}: ` +
           `expected ${formatCentsForMessage(expectedBalance)}, ` +
-          `statement shows ${formatCentsForMessage(transaction.balanceAfter)} ` +
+          `statement shows ${formatCentsForMessage(printedBalance)} ` +
           `(off by ${formatCentsForMessage(discrepancy)})`
       });
     }
 
-    // Continue from what the statement says, not from what we calculated, so
-    // one bad row produces one issue rather than cascading through the rest.
-    runningBalance = transaction.balanceAfter;
+    // Resync to the statement's figure so one bad event produces one issue
+    // rather than cascading through everything after it.
+    runningBalance = printedBalance;
   }
 
   return { isVerified: issues.length === 0, issues };

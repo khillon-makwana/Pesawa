@@ -79,4 +79,37 @@ describe('verifyBalance', () => {
   it('verifies an empty statement trivially', () => {
     expect(verifyBalance([], 1000000).isVerified).toBe(true);
   });
+
+  it('verifies a bundle that prints one balance on both rows', () => {
+  // opening 4,357; -400 and -7 settle together, both rows print 3,950
+  const transactions = [
+    buildTransaction({ receiptNo: 'SAMPLE0A01', direction: 'out', amount: 40000, balanceAfter: 395000 }),
+    buildTransaction({ receiptNo: 'SAMPLE0A01', direction: 'out', amount: 700,   balanceAfter: 395000 })
+  ];
+
+  const result = verifyBalance(transactions, 435700);
+
+  expect(result.isVerified).toBe(true);
+  expect(result.issues).toHaveLength(0);
+});
+
+it('still catches a wrong amount inside a bundle', () => {
+  const transactions = [
+    buildTransaction({ receiptNo: 'X', direction: 'out', amount: 50000, balanceAfter: 395000 }),
+    buildTransaction({ receiptNo: 'X', direction: 'out', amount: 700,   balanceAfter: 395000 })
+  ];
+
+  expect(verifyBalance(transactions, 435700).isVerified).toBe(false);
+});
+
+it('does not group same-receipt rows with different balances', () => {
+  // transfers settle row by row, unlike the bundled paybill case
+  const transactions = [
+    buildTransaction({ receiptNo: 'Y', direction: 'out', amount: 40000, balanceAfter: 395700 }),
+    buildTransaction({ receiptNo: 'Y', direction: 'out', amount: 700,   balanceAfter: 395000 })
+  ];
+
+  expect(verifyBalance(transactions, 435700).isVerified).toBe(true);
+});
+  
 });
