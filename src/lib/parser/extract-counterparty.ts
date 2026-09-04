@@ -113,6 +113,12 @@ export function extractCounterparty(
     case 'bundle_purchase':
       return extractFromBundlePurchase(normalised);
 
+    case 'pochi_payment':
+      return extractFromPersonTransfer(normalised);   // "to - 254700***101 JAMES KIPTOO"
+
+    case 'unit_trust_investment':
+      return extractFromPayBill(normalised);          // "To 4145555 - ZIIDI MMF by ..."
+
     case 'charge':
     case 'airtime':
       return NO_COUNTERPARTY;

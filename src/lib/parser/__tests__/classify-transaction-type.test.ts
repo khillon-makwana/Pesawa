@@ -13,7 +13,9 @@ describe('classifyTransactionType', () => {
       ['Pay Bill Online to 247247 - EQUITY PAYBILL Acc. 5501',     'paybill_payment'],
       ['Merchant Payment to 5001234 - GREENFIELD UNIVERSITY',      'till_payment'],
       ['Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254712345678 JANE DOE', 'bundle_purchase'],
-      ['Airtime Purchase',                                         'airtime']
+      ['Airtime Purchase', 'airtime'],
+      ['Customer Payment to Small Business to - 254700***102 JAMES KIPTOO', 'pochi_payment'],
+      ['Unit Trust Invest To 4145555 - ZIIDI MMF by M-PESA\\UnitTrust', 'unit_trust_investment'],
     ];
 
     it.each(cases)('classifies %s', (details, expectedType) => {
@@ -41,13 +43,20 @@ describe('classifyTransactionType', () => {
     });
   });
 
-  describe('charges are never confused with their parent transaction', () => {
+  describe('similar formats are not confused with one another', () => {
     it('classifies "Pay Bill Charge" as a charge, not a paybill payment', () => {
       expect(classifyTransactionType('Pay Bill Charge').type).toBe('charge');
     });
 
     it('classifies "Customer Transfer of Funds Charge" as a charge, not a transfer', () => {
       expect(classifyTransactionType('Customer Transfer of Funds Charge').type).toBe('charge');
+    });
+
+    it('does not mistake a Pochi payment for a transfer', () => {
+      // the string contains "to - <phone> <name>", the same shape as a transfer
+      expect(classifyTransactionType(
+        'Customer Payment to Small Business to - 254700***102 JAMES KIPTOO'
+      ).type).toBe('pochi_payment');
     });
   });
 

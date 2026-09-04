@@ -27,6 +27,9 @@ const VERIFIED_PATTERNS: ClassificationPattern[] = [
   { pattern: /^Customer Transfer of Funds Charge/i, type: 'charge' },
   { pattern: /^Pay Bill Charge/i,                   type: 'charge' },
 
+  { pattern: /^Customer Payment to Small Business/i, type: 'pochi_payment' },
+  { pattern: /^Unit Trust Invest To/i,               type: 'unit_trust_investment' },
+  
   { pattern: /^Funds received from/i,               type: 'payment_received' },
   { pattern: /^Customer Transfer to\b/i,            type: 'send_money' },
   { pattern: /^Pay Bill (Online )?to\b/i,           type: 'paybill_payment' },

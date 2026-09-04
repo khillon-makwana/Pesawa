@@ -25,6 +25,24 @@ describe('parseStatementRows', () => {
     expect(result.transactions).toHaveLength(7);
   });
 
+  it('parses the newer transaction types end to end', () => {
+    // opening must cover the transactions; the builder cannot print a
+    // negative balance correctly, and real M-Pesa balances never go negative
+    const { rows, meta } = new StatementBuilder(10_000_00)
+      .pochiPayment(250_00, 'JAMES KIPTOO')
+      .unitTrustInvestment(5_000_00)
+      .build();
+
+    const result = parseStatementRows(rows, meta.openingBalance);
+
+    expect(result.issues).toHaveLength(0);
+    expect(result.isBalanceVerified).toBe(true);
+    expect(result.transactions.map(t => t.type)).toEqual([
+      'pochi_payment',
+      'unit_trust_investment'
+    ]);
+  });
+
   it('returns transactions oldest first', () => {
     const { rows, meta } = new StatementBuilder()
       .receivedFunds(1_000_00, 'FIRST SENDER')
@@ -110,4 +128,5 @@ describe('parseStatementRows', () => {
     expect(result.issues).toEqual([]);
     expect(result.isBalanceVerified).toBe(true);
   });
+
 });

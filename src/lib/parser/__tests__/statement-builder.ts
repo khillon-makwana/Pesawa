@@ -192,6 +192,45 @@ export class StatementBuilder {
     });
   }
 
+    /**
+   * Pochi la Biashara — payment to a small trader's till, which is tied to a
+   * phone number rather than a till number.
+   */
+  pochiPayment(
+    amountInCents: number,
+    traderName: string,
+    traderPhone = '254700***102'
+  ) {
+    return this.addRow({
+      details: `Customer Payment to Small Business to - ${traderPhone} ${traderName}`,
+      amountInCents,
+      direction: 'out',
+      type: 'pochi_payment',
+      isRevenue: false,
+      counterpartyName: traderName,
+      counterpartyPhone: traderPhone
+    });
+  }
+
+  /**
+   * Investment into a unit trust (money market fund). Money leaves M-Pesa but
+   * is not spent — it moves into a savings product.
+   */
+  unitTrustInvestment(
+    amountInCents: number,
+    fundName = 'ZIIDI MMF',
+    shortcode = '4145555'
+  ) {
+    return this.addRow({
+      details: `Unit Trust Invest To ${shortcode} - ${fundName} by M-PESA\\UnitTrust`,
+      amountInCents,
+      direction: 'out',
+      type: 'unit_trust_investment',
+      isRevenue: false,
+      counterpartyName: fundName
+    });
+  }
+
   /**
    * Note the missing separator between shortcode and product name — this is
    * how the real statement prints it, and it is why the parser must use a

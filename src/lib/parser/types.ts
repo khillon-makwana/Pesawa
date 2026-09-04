@@ -13,6 +13,8 @@ export type TransactionType =
   | 'fuliza_repayment'
   | 'reversal'
   | 'transfer'
+  | 'pochi_payment'
+  | 'unit_trust_investment'
   | 'unknown';
 
 export type Direction = 'in' | 'out';
@@ -75,5 +77,17 @@ export interface RawRow {
   paidIn: string;           // "1,500.00" or ""
   withdrawn: string;        // "-500.00" or ""
   balance: string;          // "12,340.50"
+  page: number;
+}
+
+/**
+ * A fragment of text from the PDF with its position on the page.
+ * Coordinates are PDF user-space units, origin bottom-left.
+ */
+export interface PositionedTextItem {
+  text: string;
+  x: number;       // left edge
+  right: number;   // right edge — amounts are right-aligned, so this identifies them
+  y: number;       // baseline
   page: number;
 }

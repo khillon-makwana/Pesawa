@@ -57,6 +57,22 @@ describe('extractCounterparty', () => {
     ).name).toBe('GREENFIELD UNIVERSITY CATERING DEPARTMENT');
   });
 
+    it('extracts the trader from a Pochi payment', () => {
+    expect(extractCounterparty(
+      'Customer Payment to Small Business to - 254700***102 JAMES KIPTOO',
+      'pochi_payment'
+    )).toEqual({ name: 'JAMES KIPTOO', phone: '254700***102', confidence: 'high' });
+  });
+
+  it('extracts the fund from a unit trust investment', () => {
+    const result = extractCounterparty(
+      'Unit Trust Invest To 4145555 - ZIIDI MMF by M-PESA\\UnitTrust',
+      'unit_trust_investment'
+    );
+    expect(result.name).toBe('ZIIDI MMF by M-PESA\\UnitTrust');
+    expect(result.phone).toBeNull();
+  });
+
   it('splits the bundle shortcode from the product, with low confidence', () => {
     expect(extractCounterparty(
       'Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254712345678 JANE DOE',
