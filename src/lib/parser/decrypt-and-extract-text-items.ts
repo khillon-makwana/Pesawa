@@ -29,11 +29,10 @@ export async function decryptAndExtractTextItems(
     
     : await import('pdfjs-dist/legacy/build/pdf.mjs');
 
-  if (isBrowser) {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString();
+    if (isBrowser) {
+    // Served from public/ — copied there by the postinstall script. Resolving
+    // the worker relative to this module breaks under both Node and bundlers.
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
   }
 
   let document;

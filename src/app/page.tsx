@@ -1,69 +1,168 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import type { ParseResult } from '@/lib/parser/types';
+import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
+
+type ScreenState =
+  | { name: 'idle' }
+  | { name: 'needs_password'; file: File; hadWrongPassword: boolean }
+  | { name: 'parsing' }
+  | { name: 'done'; result: ParseResult }
+  | { name: 'failed'; message: string };
+
+export default function UploadStatementPage() {
+  const [screen, setScreen] = useState<ScreenState>({ name: 'idle' });
+  const [password, setPassword] = useState('');
+
+  async function parse(file: File, submittedPassword?: string) {
+    setScreen({ name: 'parsing' });
+
+    const outcome = await parseStatementPdf(await file.arrayBuffer(), submittedPassword);
+
+    if (outcome.ok) {
+      setPassword('');
+      setScreen({ name: 'done', result: outcome.result });
+      return;
+    }
+
+    if (outcome.reason === 'password_required' || outcome.reason === 'wrong_password') {
+      setScreen({
+        name: 'needs_password',
+        file,
+        hadWrongPassword: outcome.reason === 'wrong_password'
+      });
+      return;
+    }
+
+    setScreen({ name: 'failed', message: outcome.detail });
+  }
+
+  function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      void parse(file);
+    }
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main style={{ padding: 32, fontFamily: 'system-ui', maxWidth: 900 }}>
+      <h1>M-Pesa Statement Parser</h1>
+
+      {screen.name === 'idle' && (
+        <div>
+          <p>Select your M-Pesa statement PDF.</p>
+          <input type="file" accept="application/pdf" onChange={handleFileSelected} />
+          <p style={{ fontSize: 14, color: '#555', marginTop: 16 }}>
+            Your statement is read entirely in this browser. Nothing is uploaded.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      )}
+
+      {screen.name === 'needs_password' && (
+        <div>
+          <p>This statement is password protected.</p>
+          <p style={{ fontSize: 14, color: '#555' }}>
+            Enter the code Safaricom sent with the statement.{' '}
+            <strong>This is not your M-PESA PIN.</strong> Never enter your PIN here or anywhere else.
+          </p>
+
+          <input
+            type="password"
+            value={password}
+            onChange={event => setPassword(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter' && screen.name === 'needs_password') {
+                void parse(screen.file, password);
+              }
+            }}
+            autoFocus
+          />
+          <button onClick={() => void parse(screen.file, password)} style={{ marginLeft: 8 }}>
+            Open statement
+          </button>
+
+          {screen.hadWrongPassword && (
+            <p style={{ color: '#b00' }}>That code did not work. Try again.</p>
+          )}
         </div>
-      </main>
+      )}
+
+      {screen.name === 'parsing' && <p>Reading statement…</p>}
+
+      {screen.name === 'failed' && (
+        <div>
+          <p style={{ color: '#b00' }}>{screen.message}</p>
+          <button onClick={() => setScreen({ name: 'idle' })}>Start over</button>
+        </div>
+      )}
+
+      {screen.name === 'done' && <StatementSummary result={screen.result} />}
+    </main>
+  );
+}
+
+function formatCents(cents: number) {
+  return `KSh ${(cents / 100).toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
+}
+
+function StatementSummary({ result }: { result: ParseResult }) {
+  const { meta, transactions, issues } = result;
+
+  return (
+    <div>
+      <h2>{transactions.length} transactions</h2>
+      <p>
+        Opening {formatCents(meta.openingBalance)} · Closing {formatCents(meta.closingBalance)} ·{' '}
+        Balance {meta.balanceVerified ? 'verified' : 'not verified'}
+      </p>
+
+      {issues.length > 0 && (
+        <>
+          <h3>Issues ({issues.length})</h3>
+          <ul>
+            {issues.map((issue, index) => (
+              <li key={index}>
+                [{issue.type}] {issue.detail}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      <h3>Transactions</h3>
+      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
+        <thead>
+          <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Counterparty</th>
+            <th style={{ textAlign: 'right' }}>Amount</th>
+            <th style={{ textAlign: 'right' }}>Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.map(transaction => (
+            <tr key={`${transaction.receiptNo}-${transaction.type}`}>
+              <td>{new Date(transaction.completedAt).toLocaleString('en-KE')}</td>
+              <td>
+                {transaction.type}
+                {transaction.confidence === 'low' && ' ⚠'}
+              </td>
+              <td>
+                {transaction.type === 'charge' && transaction.chargeForReceipt
+                  ? `Fee for ${transaction.chargeForReceipt}`
+                  : transaction.counterpartyName ?? '—'}
+              </td>
+              <td style={{ textAlign: 'right' }}>
+                {transaction.direction === 'in' ? '+' : '−'}
+                {formatCents(transaction.amount)}
+              </td>
+              <td style={{ textAlign: 'right' }}>{formatCents(transaction.balanceAfter)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -46,4 +46,6 @@ next-env.d.ts
 # Local inspection scripts
 inspect-pdf.mts
 
+public/pdf.worker.min.mjs
+
 
