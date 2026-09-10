@@ -19,21 +19,21 @@ export async function decryptAndExtractTextItems(
   fileBytes: ArrayBuffer,
   password?: string
 ): Promise<PdfExtractionOutcome> {
-  // pdf.js ships two builds. The default one expects browser APIs and resolves
-  // its worker relative to the importing module, which fails under Node. The
-  // legacy build runs on the main thread with no worker.
-  const isBrowser = typeof window !== 'undefined';
+    const isBrowser = typeof window !== 'undefined';
 
-  const pdfjs = isBrowser
+    // pdf.js ships a modern and a legacy build. We use the legacy one in both
+    // environments: Safari does not support async iteration over ReadableStream,
+    // which the modern build's getTextContent relies on, and the modern build
+    // also fails to resolve its worker under Node. One import path, both work.
+      const pdfjs = isBrowser
     ? await import('pdfjs-dist')
-    
+    // {@}ts-expect-error - the legacy build ships no type declarations
     : await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     if (isBrowser) {
-    // Served from public/ — copied there by the postinstall script. Resolving
-    // the worker relative to this module breaks under both Node and bundlers.
-    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-  }
+        // Served from public/ — copied there by the postinstall script.
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+    }
 
   let document;
   try {
@@ -47,24 +47,32 @@ export async function decryptAndExtractTextItems(
 
   const items: PositionedTextItem[] = [];
 
-  for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
     const page = await document.getPage(pageNumber);
-    const textContent = await page.getTextContent();
 
-    for (const item of textContent.items) {
-      if (!('str' in item) || item.str.trim() === '') {
-        continue;
+    // Safari does not support async iteration over ReadableStream, which
+    // getTextContent() uses internally. Reading the stream manually avoids it.
+    const reader = page.streamTextContent().getReader();
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      for (const item of value.items) {
+        if (!('str' in item) || item.str.trim() === '') {
+          continue;
+        }
+
+        const [, , , , x, y] = item.transform;
+
+        items.push({
+          text: item.str,
+          x: Math.round(x),
+          right: Math.round(x + item.width),
+          y: Math.round(y),
+          page: pageNumber
+        });
       }
-
-      const [, , , , x, y] = item.transform;
-
-      items.push({
-        text: item.str,
-        x: Math.round(x),
-        right: Math.round(x + item.width),
-        y: Math.round(y),
-        page: pageNumber
-      });
     }
   }
 
