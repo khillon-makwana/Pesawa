@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import type { ParseResult } from '@/lib/parser/types';
+import type { ParseResult, Transaction } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
+import { summariseCharges } from '@/lib/analysis/summarise-charges';
 
 type ScreenState =
   | { name: 'idle' }
@@ -117,6 +118,8 @@ function StatementSummary({ result }: { result: ParseResult }) {
         Balance {meta.balanceVerified ? 'verified' : 'not verified'}
       </p>
 
+      <ChargesPanel transactions={transactions} />
+
       {issues.length > 0 && (
         <>
           <h3>Issues ({issues.length})</h3>
@@ -163,6 +166,28 @@ function StatementSummary({ result }: { result: ParseResult }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+function ChargesPanel({ transactions }: { transactions: Transaction[] }) {
+  const charges = summariseCharges(transactions);
+
+  if (charges.chargeCount === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ margin: '24px 0', padding: 16, background: '#f6f6f6' }}>
+      <h3 style={{ marginTop: 0 }}>What M-PESA charged you</h3>
+      <p style={{ fontSize: 24, margin: '8px 0' }}>
+        {formatCents(charges.totalChargesInCents)}
+      </p>
+      <p style={{ fontSize: 14, color: '#555', margin: 0 }}>
+        {charges.chargeCount} charges · average {formatCents(charges.averageChargeInCents)} ·
+        largest {formatCents(charges.largestChargeInCents)}
+        {charges.shareOfSpendingPercent !== null &&
+          ` · ${charges.shareOfSpendingPercent}% of what you spent`}
+      </p>
     </div>
   );
 }
