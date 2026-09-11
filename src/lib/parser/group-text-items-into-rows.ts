@@ -145,6 +145,16 @@ export function groupTextItemsIntoRows(items: PositionedTextItem[]): RawRow[] {
       continue; // header row and anything above the table
     }
 
+    // The Data Protection Act disclaimer marks the end of the table on each
+    // page. Everything below it — verification code, footer, page number — is
+    // page furniture, so stop extending the row above. The letters are spaced
+    // out in the source PDF, hence the loose pattern.
+    const lineText = line.map(item => item.text).join(' ');
+    if (/D\s*iscl\s*a\s*i\s*m\s*e\s*r/i.test(lineText)) {
+      currentRow = null;
+      continue;
+    }
+
     const continuation = extractDetailsContinuation(line);
     if (continuation !== null) {
       currentRow.details = `${currentRow.details} ${continuation}`;

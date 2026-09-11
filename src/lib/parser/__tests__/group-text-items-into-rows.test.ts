@@ -96,6 +96,22 @@ describe('groupTextItemsIntoRows', () => {
     expect(rows[0].details).toBe('Customer Transfer to -');
   });
 
+    it('stops collecting continuations at the page footer', () => {
+        const rows = groupTextItemsIntoRows([
+            item('SAMPLE0A07', 38, 80, 427),
+            item('2026-06-02 10:05:40', 108, 171, 427),
+            item('Funds received from -', 177, 243, 427),
+            item('Completed', 282, 315, 427),
+            item('10,000.00', 387, 418, 427),
+            item('15,640.00', 526, 557, 427),
+            item('254700***104 JANE DOE', 177, 272, 421),
+            item('D iscl a i m e r: A n y p e rso n a l', 39, 556, 118),
+            item('F or s e lf-h e lp di a l *2 3 4 # | W e b : w w w', 57, 183, 22)
+        ]);
+
+        expect(rows[0].details).toBe('Funds received from - 254700***104 JANE DOE');
+    });
+
   it('separates two adjacent rows only 10 units apart', () => {
     const rows = groupTextItemsIntoRows([
       item('SAMPLE0A06', 38, 78, 727),
