@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ParseResult, Transaction } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
 import { summariseCharges } from '@/lib/analysis/summarise-charges';
+import { rankCounterparties } from '@/lib/analysis/rank-counterparties';
 
 type ScreenState =
   | { name: 'idle' }
@@ -119,6 +120,7 @@ function StatementSummary({ result }: { result: ParseResult }) {
       </p>
 
       <ChargesPanel transactions={transactions} />
+      <CounterpartiesPanel transactions={transactions} />
 
       {issues.length > 0 && (
         <>
@@ -188,6 +190,44 @@ function ChargesPanel({ transactions }: { transactions: Transaction[] }) {
         {charges.shareOfSpendingPercent !== null &&
           ` · ${charges.shareOfSpendingPercent}% of what you spent`}
       </p>
+    </div>
+  );
+}
+
+function CounterpartiesPanel({ transactions }: { transactions: Transaction[] }) {
+  const rankings = rankCounterparties(transactions).slice(0, 10);
+
+  if (rankings.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ margin: '24px 0' }}>
+      <h3>Who you transact with most</h3>
+      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
+        <thead>
+          <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
+            <th>Name</th>
+            <th style={{ textAlign: 'right' }}>Transactions</th>
+            <th style={{ textAlign: 'right' }}>Paid out</th>
+            <th style={{ textAlign: 'right' }}>Received</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rankings.map(party => (
+            <tr key={party.displayName}>
+              <td>{party.displayName}</td>
+              <td style={{ textAlign: 'right' }}>{party.transactionCount}</td>
+              <td style={{ textAlign: 'right' }}>
+                {party.totalPaidInCents > 0 ? formatCents(party.totalPaidInCents) : '—'}
+              </td>
+              <td style={{ textAlign: 'right' }}>
+                {party.totalReceivedInCents > 0 ? formatCents(party.totalReceivedInCents) : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
