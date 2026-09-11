@@ -5,6 +5,8 @@ import type { ParseResult, Transaction } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
 import { summariseCharges } from '@/lib/analysis/summarise-charges';
 import { rankCounterparties } from '@/lib/analysis/rank-counterparties';
+import { summariseMoneyFlow } from '@/lib/analysis/summarise-money-flow';
+import { summarisePaymentTiming } from '@/lib/analysis/summarise-payment-timing';
 
 type ScreenState =
   | { name: 'idle' }
@@ -119,8 +121,10 @@ function StatementSummary({ result }: { result: ParseResult }) {
         Balance {meta.balanceVerified ? 'verified' : 'not verified'}
       </p>
 
+      <MoneyFlowPanel transactions={transactions} />
       <ChargesPanel transactions={transactions} />
       <CounterpartiesPanel transactions={transactions} />
+      <TimingPanel transactions={transactions} />
 
       {issues.length > 0 && (
         <>
@@ -228,6 +232,86 @@ function CounterpartiesPanel({ transactions }: { transactions: Transaction[] }) 
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function MoneyFlowPanel({ transactions }: { transactions: Transaction[] }) {
+  const flow = summariseMoneyFlow(transactions);
+
+  if (transactions.length === 0) {
+    return null;
+  }
+
+  return (
+    <div style={{ margin: '24px 0' }}>
+      <h3>Where your money went</h3>
+
+      <p style={{ fontSize: 14, color: '#555' }}>
+        In {formatCents(flow.totalInInCents)} · Out {formatCents(flow.totalOutInCents)} · Net{' '}
+        {flow.netInCents >= 0 ? '+' : '−'}
+        {formatCents(Math.abs(flow.netInCents))}
+        {flow.revenueInCents !== flow.totalInInCents &&
+          ` · of which ${formatCents(flow.revenueInCents)} was earned`}
+      </p>
+
+      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
+        <tbody>
+          {flow.spendingByCategory.map(category => (
+            <tr key={category.label}>
+              <td style={{ padding: '4px 0' }}>{category.label}</td>
+              <td style={{ textAlign: 'right', width: 60, color: '#555' }}>
+                {category.transactionCount}
+              </td>
+              <td style={{ textAlign: 'right', width: 140 }}>
+                {formatCents(category.totalInCents)}
+              </td>
+              <td style={{ textAlign: 'right', width: 60, color: '#555' }}>
+                {category.shareOfTotalPercent}%
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function TimingPanel({ transactions }: { transactions: Transaction[] }) {
+  const timing = summarisePaymentTiming(transactions);
+
+  if (timing.busiestHourLabel === null) {
+    return null;
+  }
+
+  const peakCount = Math.max(...timing.byHour.map(bucket => bucket.transactionCount));
+
+  return (
+    <div style={{ margin: '24px 0' }}>
+      <h3>When you transact</h3>
+      <p style={{ fontSize: 14, color: '#555' }}>
+        Busiest around {timing.busiestHourLabel}, and on {timing.busiestWeekdayLabel}s.
+      </p>
+
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80 }}>
+        {timing.byHour.map(bucket => (
+          <div
+            key={bucket.label}
+            title={`${bucket.label}: ${bucket.transactionCount}`}
+            style={{
+              flex: 1,
+              height: `${(bucket.transactionCount / peakCount) * 100}%`,
+              minHeight: bucket.transactionCount > 0 ? 2 : 0,
+              background: '#4a7'
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex', fontSize: 11, color: '#888', marginTop: 4 }}>
+        <span style={{ flex: 1 }}>12am</span>
+        <span style={{ flex: 1, textAlign: 'center' }}>12pm</span>
+        <span style={{ flex: 1, textAlign: 'right' }}>11pm</span>
+      </div>
     </div>
   );
 }
