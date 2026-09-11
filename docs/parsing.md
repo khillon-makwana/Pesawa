@@ -41,6 +41,8 @@ details-column text and are appended to the row above.
 Line grouping keys on page as well as `y`, because `y` restarts at the top of
 every page.
 
+The footer's letter-spaced text places some fragments within tolerance of the details column, so continuation collection stops at the Data Protection Act disclaimer rather than relying on column position alone.
+
 ## Verified transaction formats
 
 Confirmed against a real statement. Matched with high confidence.
@@ -137,6 +139,8 @@ example.
 
 **Inconsistent source data.** Statements can be internally inconsistent. The
 parser reports this and marks the statement unverified rather than guessing.
+
+**Counterparty matching is heuristic.** Names are normalised by lowercasing and stripping punctuation, so SAM NG'ONG'A and SAM NGONGA group together. Two different people with the same name would also group. Adequate for a personal statement; a business tool would need the phone number as a tiebreaker.
 
 ## Environment notes
 
