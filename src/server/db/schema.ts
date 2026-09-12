@@ -94,3 +94,22 @@ export const parseIssues = pgTable(
   },
   table => [index('idx_issues_statement').on(table.statementId)]
 );
+
+export const sessions = pgTable(
+  'sessions',
+  {
+    /**
+     * The SHA-256 hash of the session token, never the token itself. If this
+     * table leaks, an attacker cannot impersonate anyone — same reasoning as
+     * hashing passwords.
+     */
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    userAgent: text('user_agent')
+  },
+  table => [index('idx_sessions_user').on(table.userId)]
+);
