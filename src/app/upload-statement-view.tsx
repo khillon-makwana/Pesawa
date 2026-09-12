@@ -9,6 +9,8 @@ import { summariseMoneyFlow } from '@/lib/analysis/summarise-money-flow';
 import { summarisePaymentTiming } from '@/lib/analysis/summarise-payment-timing';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
+import { downloadCsv } from '@/lib/export/download-csv';
 
 type ScreenState =
   | { name: 'idle' }
@@ -228,6 +230,16 @@ function StatementSummary({
     }
   }
 
+  function handleExport(what: 'transactions' | 'issues') {
+    const baseName = fileName.replace(/\.pdf$/i, '');
+
+    if (what === 'transactions') {
+      downloadCsv(`${baseName}-transactions.csv`, buildTransactionsCsv(transactions));
+    } else {
+      downloadCsv(`${baseName}-issues.csv`, buildIssuesCsv(issues));
+    }
+  }
+
   return (
     <div>
       <h2>{transactions.length} transactions</h2>
@@ -258,6 +270,15 @@ function StatementSummary({
         )}
 
         {saveState.name === 'failed' && <p style={{ color: '#b00' }}>{saveState.message}</p>}
+      </div>
+
+            <div style={{ display: 'flex', gap: 12, margin: '16px 0' }}>
+        <button onClick={() => handleExport('transactions')}>
+          Download transactions (CSV)
+        </button>
+        {issues.length > 0 && (
+          <button onClick={() => handleExport('issues')}>Download issues (CSV)</button>
+        )}
       </div>
 
       <MoneyFlowPanel transactions={transactions} />
