@@ -40,8 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Never commit real M-Pesa statements
+# Never commit real M-PESA statements
 *.pdf
+!public/samples/*.pdf
 
 # Local inspection scripts
 inspect-pdf.mts

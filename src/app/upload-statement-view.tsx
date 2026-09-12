@@ -44,6 +44,33 @@ export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
     setScreen({ name: 'failed', message: outcome.detail });
   }
 
+    async function loadSample(withDefect: boolean) {
+    setScreen({ name: 'parsing' });
+
+    const path = withDefect
+      ? '/samples/sample-statement-with-defect.pdf'
+      : '/samples/sample-statement.pdf';
+
+    try {
+      const response = await fetch(path);
+      const bytes = await response.arrayBuffer();
+      const outcome = await parseStatementPdf(bytes, '123456');
+
+      if (outcome.ok) {
+        setScreen({
+          name: 'done',
+          result: outcome.result,
+          fileName: withDefect ? 'sample-statement-with-defect.pdf' : 'sample-statement.pdf'
+        });
+        return;
+      }
+
+      setScreen({ name: 'failed', message: outcome.detail });
+    } catch {
+      setScreen({ name: 'failed', message: 'Could not load the sample statement' });
+    }
+  }
+
   function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (file) {
@@ -55,13 +82,37 @@ export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
     <main style={{ padding: 32, fontFamily: 'system-ui', maxWidth: 900 }}>
       <h1>M-Pesa Statement Parser</h1>
 
-      {screen.name === 'idle' && (
+            {screen.name === 'idle' && (
         <div>
-          <p>Select your M-Pesa statement PDF.</p>
+          <p>Select your M-PESA statement PDF.</p>
           <input type="file" accept="application/pdf" onChange={handleFileSelected} />
+
           <p style={{ fontSize: 14, color: '#555', marginTop: 16 }}>
-            Your statement is read entirely in this browser. Nothing is uploaded.
+            Your statement is read entirely in this browser. The password and the file
+            are never sent anywhere.
           </p>
+
+          <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #ddd' }}>
+            <h3 style={{ marginTop: 0 }}>No statement to hand?</h3>
+            <p style={{ fontSize: 14, color: '#555' }}>
+              Try one of these. Both contain entirely fictional data.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button onClick={() => void loadSample(false)}>
+                Try a sample statement
+              </button>
+              <button onClick={() => void loadSample(true)}>
+                Try one with a missing transaction
+              </button>
+            </div>
+
+            <p style={{ fontSize: 13, color: '#777', marginTop: 12 }}>
+              The second sample has a transaction removed from it. The balance check
+              detects the gap and reports the exact amount that is unaccounted for —
+              the same thing happened on a real statement from Safaricom.
+            </p>
+          </div>
         </div>
       )}
 
