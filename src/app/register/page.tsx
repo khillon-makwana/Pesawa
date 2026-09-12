@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { INPUT, LABEL, PRIMARY_BUTTON } from '@/components/ui/form-styles';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -29,7 +30,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // refresh() re-runs server components so the layout picks up the session
       router.push('/');
       router.refresh();
     } catch {
@@ -40,53 +40,82 @@ export default function RegisterPage() {
   }
 
   return (
-    <main style={{ padding: 32, fontFamily: 'system-ui', maxWidth: 400 }}>
-      <h1>Create an account</h1>
+    <div className="mx-auto max-w-sm">
+      <h1 className="text-2xl font-semibold">Create an account</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Only needed if you want to save statements. Everything else works without one.
+      </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <label>
-          Name (optional)
+      <div className="mt-6 space-y-4 rounded-lg border bg-card p-6">
+        <div>
+          <label htmlFor="name" className={LABEL}>
+            Name <span className="font-normal text-muted-foreground">(optional)</span>
+          </label>
           <input
+            id="name"
             type="text"
             value={name}
             onChange={event => setName(event.target.value)}
-            style={{ display: 'block', width: '100%' }}
+            autoComplete="name"
+            className={INPUT}
           />
-        </label>
+        </div>
 
-        <label>
-          Email
+        <div>
+          <label htmlFor="email" className={LABEL}>
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={event => setEmail(event.target.value)}
             autoComplete="email"
-            style={{ display: 'block', width: '100%' }}
+            className={INPUT}
           />
-        </label>
+        </div>
 
-        <label>
-          Password
+        <div>
+          <label htmlFor="password" className={LABEL}>
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={event => setPassword(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') void handleSubmit();
+            }}
             autoComplete="new-password"
-            style={{ display: 'block', width: '100%' }}
+            className={INPUT}
           />
-          <span style={{ fontSize: 13, color: '#555' }}>At least 10 characters.</span>
-        </label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            At least 10 characters. Length matters more than symbols.
+          </p>
+        </div>
 
-        {errorMessage !== null && <p style={{ color: '#b00' }}>{errorMessage}</p>}
+        {errorMessage !== null && (
+          <p className="text-sm text-destructive" role="alert">
+            {errorMessage}
+          </p>
+        )}
 
-        <button onClick={handleSubmit} disabled={isSubmitting}>
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className={`w-full ${PRIMARY_BUTTON}`}
+        >
           {isSubmitting ? 'Creating account…' : 'Create account'}
         </button>
       </div>
 
-      <p style={{ fontSize: 14, marginTop: 24 }}>
-        Already have an account? <Link href="/login">Sign in</Link>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{' '}
+        <Link href="/login" className="underline">
+          Sign in
+        </Link>
       </p>
-    </main>
+    </div>
   );
 }

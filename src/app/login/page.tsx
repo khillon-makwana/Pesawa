@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { INPUT, LABEL, PRIMARY_BUTTON } from '@/components/ui/form-styles';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,24 +39,33 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ padding: 32, fontFamily: 'system-ui', maxWidth: 400 }}>
-      <h1>Sign in</h1>
+    <div className="mx-auto max-w-sm">
+      <h1 className="text-2xl font-semibold">Sign in</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        You only need an account to save statements.
+      </p>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <label>
-          Email
+      <div className="mt-6 space-y-4 rounded-lg border bg-card p-6">
+        <div>
+          <label htmlFor="email" className={LABEL}>
+            Email
+          </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={event => setEmail(event.target.value)}
             autoComplete="email"
-            style={{ display: 'block', width: '100%' }}
+            className={INPUT}
           />
-        </label>
+        </div>
 
-        <label>
-          Password
+        <div>
+          <label htmlFor="password" className={LABEL}>
+            Password
+          </label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={event => setPassword(event.target.value)}
@@ -63,20 +73,31 @@ export default function LoginPage() {
               if (event.key === 'Enter') void handleSubmit();
             }}
             autoComplete="current-password"
-            style={{ display: 'block', width: '100%' }}
+            className={INPUT}
           />
-        </label>
+        </div>
 
-        {errorMessage !== null && <p style={{ color: '#b00' }}>{errorMessage}</p>}
+        {errorMessage !== null && (
+          <p className="text-sm text-destructive" role="alert">
+            {errorMessage}
+          </p>
+        )}
 
-        <button onClick={handleSubmit} disabled={isSubmitting}>
+        <button
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className={`w-full ${PRIMARY_BUTTON}`}
+        >
           {isSubmitting ? 'Signing in…' : 'Sign in'}
         </button>
       </div>
 
-      <p style={{ fontSize: 14, marginTop: 24 }}>
-        No account? <Link href="/register">Create one</Link>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        No account?{' '}
+        <Link href="/register" className="underline">
+          Create one
+        </Link>
       </p>
-    </main>
+    </div>
   );
 }

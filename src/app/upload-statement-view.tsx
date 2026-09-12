@@ -1,23 +1,31 @@
 'use client';
 
 import { useState } from 'react';
-import type { ParseResult, Transaction } from '@/lib/parser/types';
+import type { ParseResult } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
-import { summariseCharges } from '@/lib/analysis/summarise-charges';
-import { rankCounterparties } from '@/lib/analysis/rank-counterparties';
-import { summariseMoneyFlow } from '@/lib/analysis/summarise-money-flow';
-import { summarisePaymentTiming } from '@/lib/analysis/summarise-payment-timing';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
 import { downloadCsv } from '@/lib/export/download-csv';
+import { TransactionList } from '@/components/statement/transaction-list';
+import { ChargesPanel } from '@/components/statement/charges-panel';
+import { MoneyFlowPanel } from '@/components/statement/money-flow-panel';
+import { CounterpartiesPanel } from '@/components/statement/counterparties-panel';
+import { TimingPanel } from '@/components/statement/timing-panel';
+import { formatKsh } from '@/components/statement/format';
 
 type ScreenState =
   | { name: 'idle' }
   | { name: 'needs_password'; file: File; hadWrongPassword: boolean }
   | { name: 'parsing' }
-  | { name: 'done'; result: ParseResult; fileName: string  }
+  | { name: 'done'; result: ParseResult; fileName: string }
   | { name: 'failed'; message: string };
+
+const PRIMARY_BUTTON =
+  'cursor-pointer rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
+
+const SECONDARY_BUTTON =
+  'cursor-pointer rounded-md border bg-card px-4 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring';
 
 export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
   const [screen, setScreen] = useState<ScreenState>({ name: 'idle' });
@@ -46,7 +54,7 @@ export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
     setScreen({ name: 'failed', message: outcome.detail });
   }
 
-    async function loadSample(withDefect: boolean) {
+  async function loadSample(withDefect: boolean) {
     setScreen({ name: 'parsing' });
 
     const path = withDefect
@@ -81,94 +89,140 @@ export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
   }
 
   return (
-    <main style={{ padding: 32, fontFamily: 'system-ui', maxWidth: 900 }}>
-      <h1>M-Pesa Statement Parser</h1>
-
-            {screen.name === 'idle' && (
-        <div>
-          <p>Select your M-PESA statement PDF.</p>
-          <input type="file" accept="application/pdf" onChange={handleFileSelected} />
-
-          <p style={{ fontSize: 14, color: '#555', marginTop: 16 }}>
-            Your statement is read entirely in this browser. The password and the file
-            are never sent anywhere.
+    <main>
+      {screen.name === 'idle' && (
+        <div className="mx-auto max-w-2xl">
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+            See what M-PESA actually costs you
+          </h1>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Open your statement and get a breakdown of where your money went, what you
+            paid in charges, and who you transact with most.
           </p>
 
-          <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #ddd' }}>
-            <h3 style={{ marginTop: 0 }}>No statement to hand?</h3>
-            <p style={{ fontSize: 14, color: '#555' }}>
+          <div className="mt-8 rounded-lg border bg-card p-6">
+            <label
+              htmlFor="statement-file"
+              className="block text-sm font-medium"
+            >
+              Your M-PESA statement
+            </label>
+            <input
+              id="statement-file"
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileSelected}
+              className="mt-2 block w-full cursor-pointer text-sm file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            />
+            <p className="mt-4 text-sm text-muted-foreground">
+              Your statement is read entirely in this browser. The file and its password
+              are never sent anywhere.{' '}
+              <Link href="/privacy" className="underline">
+                How this works
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-8 border-t pt-8">
+            <h2 className="text-lg font-semibold">No statement to hand?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
               Try one of these. Both contain entirely fictional data.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={() => void loadSample(false)}>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button onClick={() => void loadSample(false)} className={PRIMARY_BUTTON}>
                 Try a sample statement
               </button>
-              <button onClick={() => void loadSample(true)}>
+              <button onClick={() => void loadSample(true)} className={SECONDARY_BUTTON}>
                 Try one with a missing transaction
               </button>
             </div>
 
-            <p style={{ fontSize: 13, color: '#777', marginTop: 12 }}>
+            <p className="mt-4 text-sm text-muted-foreground">
               The second sample has a transaction removed from it. The balance check
-              detects the gap and reports the exact amount that is unaccounted for —
-              the same thing happened on a real statement from Safaricom.
+              detects the gap and reports the exact amount that is unaccounted for — the
+              same thing happened on a real statement from Safaricom.
             </p>
           </div>
         </div>
       )}
 
       {screen.name === 'needs_password' && (
-        <div>
-          <p>This statement is password protected.</p>
-          <p style={{ fontSize: 14, color: '#555' }}>
-            Enter the code Safaricom sent with the statement.{' '}
-            <strong>This is not your M-PESA PIN.</strong> Never enter your PIN here or anywhere else.
-          </p>
+        <div className="mx-auto max-w-md">
+          <h1 className="text-2xl font-semibold">This statement is protected</h1>
 
-          <input
-            type="password"
-            value={password}
-            onChange={event => setPassword(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'Enter' && screen.name === 'needs_password') {
-                void parse(screen.file, password);
-              }
-            }}
-            autoFocus
-          />
-          <button onClick={() => void parse(screen.file, password)} style={{ marginLeft: 8 }}>
-            Open statement
-          </button>
+          <div className="mt-6 rounded-lg border bg-card p-6">
+            <label htmlFor="statement-password" className="block text-sm font-medium">
+              Statement code
+            </label>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The code Safaricom sent with the statement.{' '}
+              <strong className="font-medium text-foreground">
+                This is not your M-PESA PIN.
+              </strong>{' '}
+              Never enter your PIN here or anywhere else.
+            </p>
 
-          {screen.hadWrongPassword && (
-            <p style={{ color: '#b00' }}>That code did not work. Try again.</p>
-          )}
+            <div className="mt-4 flex gap-2">
+              <input
+                id="statement-password"
+                type="password"
+                value={password}
+                onChange={event => setPassword(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter' && screen.name === 'needs_password') {
+                    void parse(screen.file, password);
+                  }
+                }}
+                autoFocus
+                className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-base focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              />
+              <button
+                onClick={() => void parse(screen.file, password)}
+                className={PRIMARY_BUTTON}
+              >
+                Open
+              </button>
+            </div>
+
+            {screen.hadWrongPassword && (
+              <p className="mt-3 text-sm text-destructive" role="alert">
+                That code did not work. Try again.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
-      {screen.name === 'parsing' && <p>Reading statement…</p>}
+      {screen.name === 'parsing' && (
+        <div className="py-16 text-center">
+          <p className="text-muted-foreground">Reading statement…</p>
+        </div>
+      )}
 
       {screen.name === 'failed' && (
-        <div>
-          <p style={{ color: '#b00' }}>{screen.message}</p>
-          <button onClick={() => setScreen({ name: 'idle' })}>Start over</button>
+        <div className="mx-auto max-w-md rounded-lg border bg-card p-6">
+          <p className="text-destructive" role="alert">
+            {screen.message}
+          </p>
+          <button
+            onClick={() => setScreen({ name: 'idle' })}
+            className={`mt-4 ${SECONDARY_BUTTON}`}
+          >
+            Start over
+          </button>
         </div>
       )}
 
       {screen.name === 'done' && (
-        <StatementSummary 
-        result={screen.result}
-        fileName={screen.fileName}
-        isSignedIn={isSignedIn} 
-      />
+        <StatementSummary
+          result={screen.result}
+          fileName={screen.fileName}
+          isSignedIn={isSignedIn}
+        />
       )}
     </main>
   );
-}
-
-function formatCents(cents: number) {
-  return `KSh ${(cents / 100).toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
 }
 
 function StatementSummary({
@@ -241,237 +295,85 @@ function StatementSummary({
   }
 
   return (
-    <div>
-      <h2>{transactions.length} transactions</h2>
-      <p>
-        Opening {formatCents(meta.openingBalance)} · Closing {formatCents(meta.closingBalance)} ·{' '}
-        Balance {meta.balanceVerified ? 'verified' : 'not verified'}
-      </p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold">{transactions.length} transactions</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Opening <span className="tabular">{formatKsh(meta.openingBalance)}</span> ·
+          Closing <span className="tabular">{formatKsh(meta.closingBalance)}</span> ·
+          Balance {meta.balanceVerified ? 'verified' : 'not verified'}
+        </p>
+      </div>
 
-      <div style={{ margin: '16px 0' }}>
+      <div className="flex flex-wrap items-center gap-3">
+        {isSignedIn && saveState.name === 'idle' && (
+          <button onClick={handleSave} className={PRIMARY_BUTTON}>
+            Save this statement
+          </button>
+        )}
+
+        <button onClick={() => handleExport('transactions')} className={SECONDARY_BUTTON}>
+          Download CSV
+        </button>
+
+        {issues.length > 0 && (
+          <button onClick={() => handleExport('issues')} className={SECONDARY_BUTTON}>
+            Download issues
+          </button>
+        )}
+
         {!isSignedIn && (
-          <p style={{ fontSize: 14, color: '#555' }}>
-            <Link href="/login">Sign in</Link> to save this statement.
+          <p className="text-sm text-muted-foreground">
+            <Link href="/login" className="underline">
+              Sign in
+            </Link>{' '}
+            to save this statement.
           </p>
         )}
 
-        {isSignedIn && saveState.name === 'idle' && (
-          <button onClick={handleSave}>Save this statement</button>
+        {saveState.name === 'saving' && (
+          <p className="text-sm text-muted-foreground">Saving…</p>
         )}
-
-        {saveState.name === 'saving' && <p>Saving…</p>}
 
         {saveState.name === 'saved' && (
-          <p style={{ color: '#070' }}>
+          <p className="text-sm text-[var(--color-money-in)]">
             Saved {saveState.imported} transactions
-            {saveState.duplicates > 0 && `, skipped ${saveState.duplicates} already imported`}.{' '}
-            <Link href="/statements">View your statements</Link>
+            {saveState.duplicates > 0 &&
+              `, skipped ${saveState.duplicates} already imported`}
+            .{' '}
+            <Link href="/statements" className="underline">
+              View your statements
+            </Link>
           </p>
         )}
 
-        {saveState.name === 'failed' && <p style={{ color: '#b00' }}>{saveState.message}</p>}
-      </div>
-
-            <div style={{ display: 'flex', gap: 12, margin: '16px 0' }}>
-        <button onClick={() => handleExport('transactions')}>
-          Download transactions (CSV)
-        </button>
-        {issues.length > 0 && (
-          <button onClick={() => handleExport('issues')}>Download issues (CSV)</button>
+        {saveState.name === 'failed' && (
+          <p className="text-sm text-destructive" role="alert">
+            {saveState.message}
+          </p>
         )}
       </div>
 
-      <MoneyFlowPanel transactions={transactions} />
+      {issues.length > 0 && (
+        <section className="rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-accent)]/5 p-4">
+          <h2 className="text-sm font-medium">
+            {issues.length} {issues.length === 1 ? 'issue' : 'issues'} found in this
+            statement
+          </h2>
+          <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+            {issues.map((issue, index) => (
+              <li key={index}>{issue.detail}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <ChargesPanel transactions={transactions} />
+      <MoneyFlowPanel transactions={transactions} />
       <CounterpartiesPanel transactions={transactions} />
       <TimingPanel transactions={transactions} />
 
-      {issues.length > 0 && (
-        <>
-          <h3>Issues ({issues.length})</h3>
-          <ul>
-            {issues.map((issue, index) => (
-              <li key={index}>
-                [{issue.type}] {issue.detail}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <h3>Transactions</h3>
-      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Counterparty</th>
-            <th style={{ textAlign: 'right' }}>Amount</th>
-            <th style={{ textAlign: 'right' }}>Balance</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map(transaction => (
-            <tr key={`${transaction.receiptNo}-${transaction.type}`}>
-              <td>{new Date(transaction.completedAt).toLocaleString('en-KE')}</td>
-              <td>
-                {transaction.type}
-                {transaction.confidence === 'low' && ' ⚠'}
-              </td>
-              <td>
-                {transaction.type === 'charge' && transaction.chargeForReceipt
-                  ? `Fee for ${transaction.chargeForReceipt}`
-                  : transaction.counterpartyName ?? '—'}
-              </td>
-              <td style={{ textAlign: 'right' }}>
-                {transaction.direction === 'in' ? '+' : '−'}
-                {formatCents(transaction.amount)}
-              </td>
-              <td style={{ textAlign: 'right' }}>{formatCents(transaction.balanceAfter)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-function ChargesPanel({ transactions }: { transactions: Transaction[] }) {
-  const charges = summariseCharges(transactions);
-
-  if (charges.chargeCount === 0) {
-    return null;
-  }
-
-  return (
-    <div style={{ margin: '24px 0', padding: 16, background: '#f6f6f6' }}>
-      <h3 style={{ marginTop: 0 }}>What M-PESA charged you</h3>
-      <p style={{ fontSize: 24, margin: '8px 0' }}>
-        {formatCents(charges.totalChargesInCents)}
-      </p>
-      <p style={{ fontSize: 14, color: '#555', margin: 0 }}>
-        {charges.chargeCount} charges · average {formatCents(charges.averageChargeInCents)} ·
-        largest {formatCents(charges.largestChargeInCents)}
-        {charges.shareOfSpendingPercent !== null &&
-          ` · ${charges.shareOfSpendingPercent}% of what you spent`}
-      </p>
-    </div>
-  );
-}
-
-function CounterpartiesPanel({ transactions }: { transactions: Transaction[] }) {
-  const rankings = rankCounterparties(transactions).slice(0, 10);
-
-  if (rankings.length === 0) {
-    return null;
-  }
-
-  return (
-    <div style={{ margin: '24px 0' }}>
-      <h3>Who you transact with most</h3>
-      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '1px solid #ccc' }}>
-            <th>Name</th>
-            <th style={{ textAlign: 'right' }}>Transactions</th>
-            <th style={{ textAlign: 'right' }}>Paid out</th>
-            <th style={{ textAlign: 'right' }}>Received</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rankings.map(party => (
-            <tr key={party.displayName}>
-              <td>{party.displayName}</td>
-              <td style={{ textAlign: 'right' }}>{party.transactionCount}</td>
-              <td style={{ textAlign: 'right' }}>
-                {party.totalPaidInCents > 0 ? formatCents(party.totalPaidInCents) : '—'}
-              </td>
-              <td style={{ textAlign: 'right' }}>
-                {party.totalReceivedInCents > 0 ? formatCents(party.totalReceivedInCents) : '—'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function MoneyFlowPanel({ transactions }: { transactions: Transaction[] }) {
-  const flow = summariseMoneyFlow(transactions);
-
-  if (transactions.length === 0) {
-    return null;
-  }
-
-  return (
-    <div style={{ margin: '24px 0' }}>
-      <h3>Where your money went</h3>
-
-      <p style={{ fontSize: 14, color: '#555' }}>
-        In {formatCents(flow.totalInInCents)} · Out {formatCents(flow.totalOutInCents)} · Net{' '}
-        {flow.netInCents >= 0 ? '+' : '−'}
-        {formatCents(Math.abs(flow.netInCents))}
-        {flow.revenueInCents !== flow.totalInInCents &&
-          ` · of which ${formatCents(flow.revenueInCents)} was earned`}
-      </p>
-
-      <table style={{ borderCollapse: 'collapse', fontSize: 13, width: '100%' }}>
-        <tbody>
-          {flow.spendingByCategory.map(category => (
-            <tr key={category.label}>
-              <td style={{ padding: '4px 0' }}>{category.label}</td>
-              <td style={{ textAlign: 'right', width: 60, color: '#555' }}>
-                {category.transactionCount}
-              </td>
-              <td style={{ textAlign: 'right', width: 140 }}>
-                {formatCents(category.totalInCents)}
-              </td>
-              <td style={{ textAlign: 'right', width: 60, color: '#555' }}>
-                {category.shareOfTotalPercent}%
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function TimingPanel({ transactions }: { transactions: Transaction[] }) {
-  const timing = summarisePaymentTiming(transactions);
-
-  if (timing.busiestHourLabel === null) {
-    return null;
-  }
-
-  const peakCount = Math.max(...timing.byHour.map(bucket => bucket.transactionCount));
-
-  return (
-    <div style={{ margin: '24px 0' }}>
-      <h3>When you transact</h3>
-      <p style={{ fontSize: 14, color: '#555' }}>
-        Busiest around {timing.busiestHourLabel}, and on {timing.busiestWeekdayLabel}s.
-      </p>
-
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80 }}>
-        {timing.byHour.map(bucket => (
-          <div
-            key={bucket.label}
-            title={`${bucket.label}: ${bucket.transactionCount}`}
-            style={{
-              flex: 1,
-              height: `${(bucket.transactionCount / peakCount) * 100}%`,
-              minHeight: bucket.transactionCount > 0 ? 2 : 0,
-              background: '#4a7'
-            }}
-          />
-        ))}
-      </div>
-      <div style={{ display: 'flex', fontSize: 11, color: '#888', marginTop: 4 }}>
-        <span style={{ flex: 1 }}>12am</span>
-        <span style={{ flex: 1, textAlign: 'center' }}>12pm</span>
-        <span style={{ flex: 1, textAlign: 'right' }}>11pm</span>
-      </div>
+      <TransactionList transactions={transactions} />
     </div>
   );
 }

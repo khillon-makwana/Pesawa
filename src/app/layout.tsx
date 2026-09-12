@@ -25,11 +25,14 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh bg-background font-sans antialiased">
         <SiteHeader userEmail={user?.email ?? null} />
-        {children}
+        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+          {children}
+        </div>
       </body>
     </html>
   );
