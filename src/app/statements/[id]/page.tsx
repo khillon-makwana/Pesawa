@@ -5,6 +5,8 @@ import {
   listTransactionsForStatement,
   listIssuesForStatement
 } from '@/server/services/statement-queries';
+import { DeleteStatementButton } from '@/components/delete-statement-button';
+
 
 function formatCents(cents: number) {
   return `KSh ${(cents / 100).toLocaleString('en-KE', { minimumFractionDigits: 2 })}`;
@@ -42,6 +44,10 @@ export default async function StatementDetailPage({
         Closing {formatCents(statement.closingBalance)} · Balance{' '}
         {statement.balanceVerified ? 'verified' : 'not verified'}
       </p>
+
+        <div style={{ margin: '16px 0' }}>
+            <DeleteStatementButton statementId={statement.id} />
+        </div>
 
       {issues.length > 0 && (
         <>

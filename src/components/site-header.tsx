@@ -34,11 +34,14 @@ export function SiteHeader({ userEmail }: SiteHeaderProps) {
 
       {userEmail === null ? (
         <nav style={{ display: 'flex', gap: 16 }}>
+          <Link href="/privacy">Privacy</Link>
           <Link href="/login">Sign in</Link>
           <Link href="/register">Create account</Link>
         </nav>
       ) : (
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/statements">Statements</Link>
           <span style={{ color: '#555' }}>{userEmail}</span>
           <button onClick={handleSignOut}>Sign out</button>
         </div>
