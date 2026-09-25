@@ -152,7 +152,10 @@ describe('findNewTransactions', () => {
   });
 
   it('returns nothing when every row is already saved', () => {
-    const rows = [buildTransaction({ receiptNo: 'AAA' }), buildTransaction({ receiptNo: 'BBB' })];
+    const rows = [
+      buildTransaction({ receiptNo: 'AAA' }),
+      buildTransaction({ receiptNo: 'BBB' })
+    ];
 
     expect(findNewTransactions(rows, new Set(keysOf(rows)))).toEqual([]);
   });

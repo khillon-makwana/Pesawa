@@ -65,17 +65,20 @@ export function summariseMoneyFlow(transactions: Transaction[]): MoneyFlowSummar
       totalInCents,
       transactionCount: matching.length,
       shareOfTotalPercent:
-        totalOutInCents === 0 ? 0 : Math.round((totalInCents / totalOutInCents) * 1000) / 10
+        totalOutInCents === 0
+          ? 0
+          : Math.round((totalInCents / totalOutInCents) * 1000) / 10
     };
   })
     .filter(category => category.transactionCount > 0)
     .sort((a, b) => b.totalInCents - a.totalInCents);
 
   const cashMovementInCents = sumAmounts(
-    transactions.filter(transaction =>
-      transaction.type === 'unit_trust_investment' ||
-      transaction.type === 'agent_deposit' ||
-      transaction.type === 'agent_withdrawal'
+    transactions.filter(
+      transaction =>
+        transaction.type === 'unit_trust_investment' ||
+        transaction.type === 'agent_deposit' ||
+        transaction.type === 'agent_withdrawal'
     )
   );
 

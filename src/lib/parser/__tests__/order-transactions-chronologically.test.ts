@@ -38,8 +38,18 @@ describe('orderTransactionsChronologically', () => {
   it('corrects a bundle printed charge-first', () => {
     // statement order (newest first): charge above its parent
     const newestFirst = [
-      buildTransaction({ receiptNo: 'SAMPLE0A03', type: 'charge', amount: 700, balanceAfter: 811700 }),
-      buildTransaction({ receiptNo: 'SAMPLE0A03', type: 'send_money', amount: 30000, balanceAfter: 812400 })
+      buildTransaction({
+        receiptNo: 'SAMPLE0A03',
+        type: 'charge',
+        amount: 700,
+        balanceAfter: 811700
+      }),
+      buildTransaction({
+        receiptNo: 'SAMPLE0A03',
+        type: 'send_money',
+        amount: 30000,
+        balanceAfter: 812400
+      })
     ];
 
     const { transactions, issues } = orderTransactionsChronologically(newestFirst);
@@ -51,8 +61,18 @@ describe('orderTransactionsChronologically', () => {
 
   it('leaves a bundle printed parent-first alone', () => {
     const newestFirst = [
-      buildTransaction({ receiptNo: 'SAMPLE0A02', type: 'send_money', amount: 42000, balanceAfter: 281100 }),
-      buildTransaction({ receiptNo: 'SAMPLE0A02', type: 'charge', amount: 700, balanceAfter: 280400 })
+      buildTransaction({
+        receiptNo: 'SAMPLE0A02',
+        type: 'send_money',
+        amount: 42000,
+        balanceAfter: 281100
+      }),
+      buildTransaction({
+        receiptNo: 'SAMPLE0A02',
+        type: 'charge',
+        amount: 700,
+        balanceAfter: 280400
+      })
     ];
 
     const { transactions, issues } = orderTransactionsChronologically(newestFirst);
@@ -63,8 +83,18 @@ describe('orderTransactionsChronologically', () => {
 
   it('reports a bundle whose balances do not add up', () => {
     const newestFirst = [
-      buildTransaction({ receiptNo: 'BAD', type: 'charge', amount: 700, balanceAfter: 999999 }),
-      buildTransaction({ receiptNo: 'BAD', type: 'send_money', amount: 30000, balanceAfter: 812400 })
+      buildTransaction({
+        receiptNo: 'BAD',
+        type: 'charge',
+        amount: 700,
+        balanceAfter: 999999
+      }),
+      buildTransaction({
+        receiptNo: 'BAD',
+        type: 'send_money',
+        amount: 30000,
+        balanceAfter: 812400
+      })
     ];
 
     const { transactions, issues } = orderTransactionsChronologically(newestFirst);

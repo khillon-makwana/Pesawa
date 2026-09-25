@@ -39,20 +39,24 @@ const SECTIONS: { id: string; title: string; body: ReactNode }[] = [
     body: (
       <>
         <p>
-          There are no accounts and no database behind this site. Nothing you open here
-          is uploaded, because there is nowhere for it to go — the site is static files
-          and all the work happens in this tab.
+          There are no accounts and no database behind this site. Nothing you open here is
+          uploaded, because there is nowhere for it to go — the site is static files and
+          all the work happens in this tab.
         </p>
         <p>
-          Saving is optional. If you choose to save a statement, it is written to
-          storage inside this browser and goes no further. A different browser, or a
-          different device, will not have it.
+          Saving is optional. If you choose to save a statement, it is written to storage
+          inside this browser and goes no further. A different browser, or a different
+          device, will not have it.
         </p>
 
         <Matrix
           rows={[
             { label: 'The PDF itself', value: 'Never stored, never sent', tone: 'good' },
-            { label: 'The statement password', value: 'Used once, discarded', tone: 'good' },
+            {
+              label: 'The statement password',
+              value: 'Used once, discarded',
+              tone: 'good'
+            },
             {
               label: 'Parsed transactions, not saved',
               value: 'Gone when you close the tab',
@@ -120,9 +124,7 @@ export default function PrivacyPage() {
 
         <div className="mt-8 grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-14">
           <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
-            <PrivacyToc
-              sections={SECTIONS.map(({ id, title }) => ({ id, title }))}
-            />
+            <PrivacyToc sections={SECTIONS.map(({ id, title }) => ({ id, title }))} />
 
             <div className="rounded-lg border border-border bg-card p-4">
               <p className="eyebrow flex items-center gap-2 text-muted-foreground">
@@ -132,8 +134,8 @@ export default function PrivacyPage() {
                 Client-side parsing
               </p>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                PDF documents and their unlock codes stay in this tab&apos;s memory and are
-                gone on reload.
+                PDF documents and their unlock codes stay in this tab&apos;s memory and
+                are gone on reload.
               </p>
               <p className="mt-3 font-mono text-[0.625rem] text-muted-foreground">
                 Engine: Mozilla PDF.js
@@ -168,8 +170,8 @@ export default function PrivacyPage() {
               <span aria-hidden className="text-accent-bright">
                 ■
               </span>
-              Portfolio project · Client-side PDF parsing · Nothing sent to a server ·
-              No accounts, no cookies, no trackers.
+              Portfolio project · Client-side PDF parsing · Nothing sent to a server · No
+              accounts, no cookies, no trackers.
             </p>
           </article>
         </div>
@@ -205,7 +207,9 @@ function Matrix({
             </th>
             <td
               className={`px-4 py-2.5 text-right text-xs ${
-                row.tone === 'good' ? 'text-[var(--color-money-in)]' : 'text-muted-foreground'
+                row.tone === 'good'
+                  ? 'text-[var(--color-money-in)]'
+                  : 'text-muted-foreground'
               }`}
             >
               {row.value}

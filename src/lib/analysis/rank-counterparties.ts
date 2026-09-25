@@ -21,8 +21,8 @@ export interface CounterpartyRanking {
 function normaliseCounterpartyKey(name: string): string {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, '')   // drop punctuation, keep word boundaries
-    .replace(/\s+/g, ' ')          // collapse runs of whitespace
+    .replace(/[^a-z0-9\s]/g, '') // drop punctuation, keep word boundaries
+    .replace(/\s+/g, ' ') // collapse runs of whitespace
     .trim();
 }
 
@@ -104,7 +104,8 @@ export function rankCounterparties(transactions: Transaction[]): CounterpartyRan
         transactionCount: 1,
         totalPaidInCents: transaction.direction === 'out' ? transaction.amount : 0,
         totalReceivedInCents: transaction.direction === 'in' ? transaction.amount : 0,
-        netInCents: transaction.direction === 'in' ? transaction.amount : -transaction.amount,
+        netInCents:
+          transaction.direction === 'in' ? transaction.amount : -transaction.amount,
         firstSeenAt: transaction.completedAt,
         lastSeenAt: transaction.completedAt
       });
@@ -132,6 +133,8 @@ export function rankCounterparties(transactions: Transaction[]): CounterpartyRan
 
   return [...rankingsByKey.values()].sort(
     (a, b) =>
-      b.totalPaidInCents + b.totalReceivedInCents - (a.totalPaidInCents + a.totalReceivedInCents)
+      b.totalPaidInCents +
+      b.totalReceivedInCents -
+      (a.totalPaidInCents + a.totalReceivedInCents)
   );
 }

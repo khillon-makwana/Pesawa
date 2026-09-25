@@ -56,7 +56,9 @@ describe('buildTransactionsCsv', () => {
 
   it('flattens newlines in raw details so rows stay intact', () => {
     const csv = buildTransactionsCsv([
-      buildTransaction({ detailsRaw: 'Merchant Payment to 5001234 -\nGREENFIELD UNIVERSITY' })
+      buildTransaction({
+        detailsRaw: 'Merchant Payment to 5001234 -\nGREENFIELD UNIVERSITY'
+      })
     ]);
 
     expect(csv.split('\r\n')).toHaveLength(2);

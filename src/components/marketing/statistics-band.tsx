@@ -42,7 +42,9 @@ export function StatisticsBand() {
               </span>
               {item.label}
             </p>
-            <p className="tabular mt-3 text-3xl font-semibold lg:text-4xl">{item.figure}</p>
+            <p className="tabular mt-3 text-3xl font-semibold lg:text-4xl">
+              {item.figure}
+            </p>
             <p className="mt-3 text-sm text-primary-foreground/70">{item.detail}</p>
           </div>
         ))}
@@ -50,4 +52,3 @@ export function StatisticsBand() {
     </section>
   );
 }
-

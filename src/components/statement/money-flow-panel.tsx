@@ -40,10 +40,7 @@ export function MoneyFlowPanel({ transactions }: { transactions: Transaction[] }
         a list. The bar is decoration over the list, not a replacement for it —
         without CSS the list still reads correctly.
       */}
-      <div
-        role="presentation"
-        className="flex h-3 gap-0.5 overflow-hidden rounded-full"
-      >
+      <div role="presentation" className="flex h-3 gap-0.5 overflow-hidden rounded-full">
         {categories.map(category => (
           <div
             key={category.label}
@@ -138,7 +135,9 @@ export function CashFlowPanel({ transactions }: { transactions: Transaction[] })
       </dl>
 
       <p className="eyebrow mt-4 text-muted-foreground">
-        {flow.netInCents >= 0 ? 'More came in than went out' : 'More went out than came in'}
+        {flow.netInCents >= 0
+          ? 'More came in than went out'
+          : 'More went out than came in'}
       </p>
     </Panel>
   );

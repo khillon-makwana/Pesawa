@@ -89,28 +89,28 @@ describe('groupTextItemsIntoRows', () => {
       item('-420.00', 464, 487, 775),
       item('2,811.00', 530, 557, 775),
       item('D iscl a i m e r: A n y p e rso n a l', 39, 556, 118),
-      item('for w hic h it w a s p ro v id e d', 38, 126, 107)  // starts in the receipt column
+      item('for w hic h it w a s p ro v id e d', 38, 126, 107) // starts in the receipt column
     ]);
 
     expect(rows).toHaveLength(1);
     expect(rows[0].details).toBe('Customer Transfer to -');
   });
 
-    it('stops collecting continuations at the page footer', () => {
-        const rows = groupTextItemsIntoRows([
-            item('SAMPLE0A07', 38, 80, 427),
-            item('2026-06-02 10:05:40', 108, 171, 427),
-            item('Funds received from -', 177, 243, 427),
-            item('Completed', 282, 315, 427),
-            item('10,000.00', 387, 418, 427),
-            item('15,640.00', 526, 557, 427),
-            item('254700***104 JANE DOE', 177, 272, 421),
-            item('D iscl a i m e r: A n y p e rso n a l', 39, 556, 118),
-            item('F or s e lf-h e lp di a l *2 3 4 # | W e b : w w w', 57, 183, 22)
-        ]);
+  it('stops collecting continuations at the page footer', () => {
+    const rows = groupTextItemsIntoRows([
+      item('SAMPLE0A07', 38, 80, 427),
+      item('2026-06-02 10:05:40', 108, 171, 427),
+      item('Funds received from -', 177, 243, 427),
+      item('Completed', 282, 315, 427),
+      item('10,000.00', 387, 418, 427),
+      item('15,640.00', 526, 557, 427),
+      item('254700***104 JANE DOE', 177, 272, 421),
+      item('D iscl a i m e r: A n y p e rso n a l', 39, 556, 118),
+      item('F or s e lf-h e lp di a l *2 3 4 # | W e b : w w w', 57, 183, 22)
+    ]);
 
-        expect(rows[0].details).toBe('Funds received from - 254700***104 JANE DOE');
-    });
+    expect(rows[0].details).toBe('Funds received from - 254700***104 JANE DOE');
+  });
 
   it('separates two adjacent rows only 10 units apart', () => {
     const rows = groupTextItemsIntoRows([
@@ -137,27 +137,32 @@ describe('groupTextItemsIntoRows', () => {
     expect(groupTextItemsIntoRows([item('Page 2 of 4', 525, 559, 804)])).toEqual([]);
   });
 
-    it('keeps pages in order and does not merge lines across them', () => {
-        const onPage = (text: string, x: number, right: number, y: number, page: number) =>
-            ({ text, x, right, y, page });
-
-        const rows = groupTextItemsIntoRows([
-            // page 4, low on the page
-            onPage('UHDDDDDDDD', 38, 78, 200, 4),
-            onPage('2026-08-01 10:00:00', 108, 171, 200, 4),
-            onPage('Airtime Purchase', 177, 223, 200, 4),
-            onPage('Completed', 282, 315, 200, 4),
-            onPage('-50.00', 468, 487, 200, 4),
-            onPage('1,000.00', 530, 557, 200, 4),
-            // page 2, high on the page — higher y, but a later page
-            onPage('UHBBBBBBBB', 38, 78, 775, 2),
-            onPage('2026-06-04 18:25:10', 108, 171, 775, 2),
-            onPage('Customer Transfer to -', 177, 245, 775, 2),
-            onPage('Completed', 282, 315, 775, 2),
-            onPage('-420.00', 464, 487, 775, 2),
-            onPage('2,811.00', 530, 557, 775, 2)
-        ]);
-
-        expect(rows.map(r => r.receiptNo)).toEqual(['UHBBBBBBBB', 'UHDDDDDDDD']);
+  it('keeps pages in order and does not merge lines across them', () => {
+    const onPage = (text: string, x: number, right: number, y: number, page: number) => ({
+      text,
+      x,
+      right,
+      y,
+      page
     });
+
+    const rows = groupTextItemsIntoRows([
+      // page 4, low on the page
+      onPage('UHDDDDDDDD', 38, 78, 200, 4),
+      onPage('2026-08-01 10:00:00', 108, 171, 200, 4),
+      onPage('Airtime Purchase', 177, 223, 200, 4),
+      onPage('Completed', 282, 315, 200, 4),
+      onPage('-50.00', 468, 487, 200, 4),
+      onPage('1,000.00', 530, 557, 200, 4),
+      // page 2, high on the page — higher y, but a later page
+      onPage('UHBBBBBBBB', 38, 78, 775, 2),
+      onPage('2026-06-04 18:25:10', 108, 171, 775, 2),
+      onPage('Customer Transfer to -', 177, 245, 775, 2),
+      onPage('Completed', 282, 315, 775, 2),
+      onPage('-420.00', 464, 487, 775, 2),
+      onPage('2,811.00', 530, 557, 775, 2)
+    ]);
+
+    expect(rows.map(r => r.receiptNo)).toEqual(['UHBBBBBBBB', 'UHDDDDDDDD']);
+  });
 });

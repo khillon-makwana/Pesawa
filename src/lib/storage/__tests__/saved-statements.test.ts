@@ -151,7 +151,10 @@ describe('saveStatement', () => {
     );
     await saveStatement(
       buildParseResult([
-        buildTransaction({ receiptNo: 'EARLIER', completedAt: '2026-08-01T10:00:00.000Z' })
+        buildTransaction({
+          receiptNo: 'EARLIER',
+          completedAt: '2026-08-01T10:00:00.000Z'
+        })
       ]),
       'august.pdf'
     );

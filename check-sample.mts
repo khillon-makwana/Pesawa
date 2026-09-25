@@ -13,7 +13,10 @@ result.issues.slice(0, 5).forEach(i => console.log(' ', i.detail));
 
 console.log('\n--- with a missing transaction ---');
 const defective = generateSampleStatement({ seedMissingTransaction: true });
-const defectiveResult = parseStatementRows(defective.rows, defective.openingBalanceInCents);
+const defectiveResult = parseStatementRows(
+  defective.rows,
+  defective.openingBalanceInCents
+);
 
 console.log('transactions:', defectiveResult.transactions.length);
 console.log('verified:', defectiveResult.isBalanceVerified);

@@ -49,12 +49,14 @@ describe('parseStatementRow', () => {
 
   describe('a well-formed incoming row', () => {
     it('marks received funds as revenue', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Funds received from - 254712345678 JANE DOE',
-        paidIn: '10,000.00',
-        withdrawn: '',
-        balance: '15,640.00'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details: 'Funds received from - 254712345678 JANE DOE',
+          paidIn: '10,000.00',
+          withdrawn: '',
+          balance: '15,640.00'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
@@ -66,11 +68,13 @@ describe('parseStatementRow', () => {
     });
 
     it('does not treat an agent deposit as revenue', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Deposit of Funds at Agent Till 123456',
-        paidIn: '2,000.00',
-        withdrawn: ''
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details: 'Deposit of Funds at Agent Till 123456',
+          paidIn: '2,000.00',
+          withdrawn: ''
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
@@ -114,10 +118,12 @@ describe('parseStatementRow', () => {
     });
 
     it('rejects a row with both amounts — it means two rows were merged', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        paidIn: '100.00',
-        withdrawn: '-420.00'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          paidIn: '100.00',
+          withdrawn: '-420.00'
+        })
+      );
 
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
@@ -127,9 +133,11 @@ describe('parseStatementRow', () => {
 
   describe('confidence', () => {
     it('is low when the type could not be recognised', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Some Format We Have Never Seen'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details: 'Some Format We Have Never Seen'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
@@ -139,23 +147,28 @@ describe('parseStatementRow', () => {
     });
 
     it('is low when the type is recognised but the counterparty is not', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Customer Transfer to somebody'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details: 'Customer Transfer to somebody'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
 
-      expect(outcome.transaction.type).toBe('send_money');   // classified fine
+      expect(outcome.transaction.type).toBe('send_money'); // classified fine
       expect(outcome.transaction.counterpartyName).toBeNull(); // extraction failed
-      expect(outcome.transaction.confidence).toBe('low');      // so the row is low
+      expect(outcome.transaction.confidence).toBe('low'); // so the row is low
     });
 
     it('is low for a bundle purchase even when everything matches', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254712345678 JANE DOE',
-        withdrawn: '-500.00'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details:
+            'Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254712345678 JANE DOE',
+          withdrawn: '-500.00'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
@@ -165,10 +178,12 @@ describe('parseStatementRow', () => {
     });
 
     it('stays high for a charge row, which has no counterparty by design', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Customer Transfer of Funds Charge',
-        withdrawn: '-7.00'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details: 'Customer Transfer of Funds Charge',
+          withdrawn: '-7.00'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
@@ -189,22 +204,28 @@ describe('parseStatementRow', () => {
     });
 
     it('handles a details cell wrapped across lines', () => {
-      const outcome = parseStatementRow(buildRawRow({
-        details: 'Merchant Payment to 5001234 -\nGREENFIELD UNIVERSITY\nCATERING DEPARTMENT',
-        withdrawn: '-150.00'
-      }));
+      const outcome = parseStatementRow(
+        buildRawRow({
+          details:
+            'Merchant Payment to 5001234 -\nGREENFIELD UNIVERSITY\nCATERING DEPARTMENT',
+          withdrawn: '-150.00'
+        })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;
 
       expect(outcome.transaction.type).toBe('till_payment');
-      expect(outcome.transaction.counterpartyName)
-        .toBe('GREENFIELD UNIVERSITY CATERING DEPARTMENT');
+      expect(outcome.transaction.counterpartyName).toBe(
+        'GREENFIELD UNIVERSITY CATERING DEPARTMENT'
+      );
     });
 
     it('keeps the raw details untouched', () => {
       const wrapped = 'Merchant Payment to 5001234 -\nGREENFIELD UNIVERSITY';
-      const outcome = parseStatementRow(buildRawRow({ details: wrapped, withdrawn: '-150.00' }));
+      const outcome = parseStatementRow(
+        buildRawRow({ details: wrapped, withdrawn: '-150.00' })
+      );
 
       expect(outcome.ok).toBe(true);
       if (!outcome.ok) return;

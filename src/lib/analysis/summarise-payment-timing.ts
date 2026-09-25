@@ -15,7 +15,15 @@ export interface PaymentTimingSummary {
   busiestWeekdayLabel: string | null;
 }
 
-const WEEKDAY_LABELS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const WEEKDAY_LABELS = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday'
+];
 
 /** Statements are in East Africa Time; timestamps are stored as UTC. */
 const EAT_OFFSET_HOURS = 3;
@@ -39,7 +47,9 @@ function formatHourLabel(hour: number): string {
  *
  * Empty buckets are kept so a chart has a continuous axis rather than gaps.
  */
-export function summarisePaymentTiming(transactions: Transaction[]): PaymentTimingSummary {
+export function summarisePaymentTiming(
+  transactions: Transaction[]
+): PaymentTimingSummary {
   const counted = transactions.filter(transaction => transaction.type !== 'charge');
 
   const byHour: TimingBucket[] = Array.from({ length: 24 }, (_, hour) => ({

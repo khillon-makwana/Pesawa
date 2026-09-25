@@ -24,7 +24,14 @@ export function DocumentGlyph() {
 
 export function PlayGlyph() {
   return (
-    <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+    >
       <circle cx="12" cy="12" r="9" />
       <path d="m10 8.5 6 3.5-6 3.5z" fill="currentColor" stroke="none" />
     </svg>

@@ -93,7 +93,9 @@ export function ReceiptPreview() {
                   <p className="tabular text-xs">
                     {row.date} {row.time}
                   </p>
-                  <p className="tabular text-[0.625rem] text-muted-foreground">{row.ref}</p>
+                  <p className="tabular text-[0.625rem] text-muted-foreground">
+                    {row.ref}
+                  </p>
                 </td>
                 <td className="py-3 pr-3 align-top">
                   <p className="text-sm font-medium">{row.party}</p>

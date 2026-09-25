@@ -9,7 +9,11 @@ export const PARSER_VERSION = '0.1.0';
 
 export type StatementParseOutcome =
   | { ok: true; result: ParseResult }
-  | { ok: false; reason: 'wrong_password' | 'password_required' | 'invalid_pdf' | 'no_transactions'; detail: string };
+  | {
+      ok: false;
+      reason: 'wrong_password' | 'password_required' | 'invalid_pdf' | 'no_transactions';
+      detail: string;
+    };
 
 /**
  * Parses an M-Pesa statement PDF into verified transactions.
@@ -62,7 +66,8 @@ export async function parseStatementPdf(
         periodStart: transactions[0]?.completedAt ?? '',
         periodEnd: transactions[transactions.length - 1]?.completedAt ?? '',
         openingBalance: openingBalanceInCents,
-        closingBalance: transactions[transactions.length - 1]?.balanceAfter ?? openingBalanceInCents,
+        closingBalance:
+          transactions[transactions.length - 1]?.balanceAfter ?? openingBalanceInCents,
         accountLabel: null,
         balanceVerified: parsed.isBalanceVerified,
         parserVersion: PARSER_VERSION

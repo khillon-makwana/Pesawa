@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 /*
  * Pesawa reads as an archival ledger document: deep forest green on pale mint,
@@ -10,60 +10,60 @@
  */
 :root {
   /* Surfaces */
-  --background: #EDF6EF;
-  --foreground: #12211A;
-  --card: #FFFFFF;
-  --card-foreground: #12211A;
+  --background: #edf6ef;
+  --foreground: #12211a;
+  --card: #ffffff;
+  --card-foreground: #12211a;
 
   /* Brand — deep forest green. Dark enough to sit well away from Safaricom's
      own green, which this project is not affiliated with. */
-  --primary: #0C3B2A;
-  --primary-foreground: #F2FAF3;
+  --primary: #0c3b2a;
+  --primary-foreground: #f2faf3;
 
   /* Two darker surfaces for the inverted panels: the statistics band and the
      charges hero. Kept distinct so the hero reads as the deeper of the two. */
-  --surface-dark: #252F29;
-  --surface-deep: #14261D;
+  --surface-dark: #252f29;
+  --surface-deep: #14261d;
 
-  --secondary: #DCEBDF;
-  --secondary-foreground: #0C3B2A;
+  --secondary: #dcebdf;
+  --secondary-foreground: #0c3b2a;
 
   /* Charges. --accent clears 4.5:1 on the page, on a card, and on its own 12%
      tint inside a badge (5.19 / 5.73 / 4.84). That last one is why it is this
      dark: at #AA5424 the badge landed on 4.44.
      --accent-bright is for large figures and anything on a dark surface. */
-  --accent: #A34E20;
-  --accent-bright: #E8834A;
-  --accent-foreground: #FFFFFF;
+  --accent: #a34e20;
+  --accent-bright: #e8834a;
+  --accent-foreground: #ffffff;
 
-  --muted: #E2EFE4;
-  --muted-foreground: #4B5D52;
+  --muted: #e2efe4;
+  --muted-foreground: #4b5d52;
 
-  --destructive: #B3452B;
-  --destructive-foreground: #FFFFFF;
+  --destructive: #b3452b;
+  --destructive-foreground: #ffffff;
 
-  --border: #D3E4D7;
-  --input: #D3E4D7;
-  --ring: #0C3B2A;
+  --border: #d3e4d7;
+  --input: #d3e4d7;
+  --ring: #0c3b2a;
 
   /*
    * Spending categories, darkest first. Assigned by rank rather than by name,
    * so the largest slice is always the heaviest colour. Charges are the one
    * exception and keep --accent wherever they land.
    */
-  --category-1: #0C3B2A;
-  --category-2: #1C7A4C;
-  --category-3: #3B9E6B;
-  --category-4: #6FBE92;
-  --category-5: #A5D8BB;
-  --category-6: #CDE9D8;
+  --category-1: #0c3b2a;
+  --category-2: #1c7a4c;
+  --category-3: #3b9e6b;
+  --category-4: #6fbe92;
+  --category-5: #a5d8bb;
+  --category-6: #cde9d8;
 
   /* Money in / money out. Always paired with a sign, never colour alone. */
-  --money-in: #1C7A4C;
+  --money-in: #1c7a4c;
 
   /* The busiest bar in the timing chart. Its own token because the colour that
      stands out against a card differs by theme. */
-  --chart-peak: #0C3B2A;
+  --chart-peak: #0c3b2a;
 
   --radius: 0.5rem;
 }
@@ -80,52 +80,52 @@
  */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0B1310;
-    --foreground: #E4EFE7;
-    --card: #16211C;
-    --card-foreground: #E4EFE7;
+    --background: #0b1310;
+    --foreground: #e4efe7;
+    --card: #16211c;
+    --card-foreground: #e4efe7;
 
     /* Dark enough for white text to clear 4.5:1 (6.22), light enough for the
        button to clear 3:1 against the page (3.03). The range that satisfies
        both is narrow. */
-    --primary: #1F6E46;
-    --primary-foreground: #FFFFFF;
+    --primary: #1f6e46;
+    --primary-foreground: #ffffff;
 
-    --surface-dark: #1A2620;
-    --surface-deep: #21302A;
+    --surface-dark: #1a2620;
+    --surface-deep: #21302a;
 
-    --secondary: #1E2C25;
-    --secondary-foreground: #CFE6D7;
+    --secondary: #1e2c25;
+    --secondary-foreground: #cfe6d7;
 
-    --accent: #E0854E;
-    --accent-bright: #F09A62;
-    --accent-foreground: #180D05;
+    --accent: #e0854e;
+    --accent-bright: #f09a62;
+    --accent-foreground: #180d05;
 
-    --muted: #18231E;
-    --muted-foreground: #9CB2A4;
+    --muted: #18231e;
+    --muted-foreground: #9cb2a4;
 
-    --destructive: #F08163;
-    --destructive-foreground: #180A06;
+    --destructive: #f08163;
+    --destructive-foreground: #180a06;
 
     /* --input is lighter than --border on purpose: a field outline identifies a
        control and clears 3:1 against the card, while a divider does not need to
        shout. */
-    --border: #2E3E36;
-    --input: #5E7A67;
-    --ring: #4FAE7C;
+    --border: #2e3e36;
+    --input: #5e7a67;
+    --ring: #4fae7c;
 
     /* The ramp runs light to mid rather than dark to light. On a dark card the
        heaviest-looking colour is the brightest, and every step stays visible —
        the light-mode ramp's dark end would disappear here. */
-    --category-1: #B7E3C9;
-    --category-2: #8ACFA8;
-    --category-3: #5FB98A;
-    --category-4: #3D9E6E;
-    --category-5: #2C8257;
+    --category-1: #b7e3c9;
+    --category-2: #8acfa8;
+    --category-3: #5fb98a;
+    --category-4: #3d9e6e;
+    --category-5: #2c8257;
     --category-6: #226644;
 
-    --money-in: #4FC98A;
-    --chart-peak: #4FC98A;
+    --money-in: #4fc98a;
+    --chart-peak: #4fc98a;
   }
 }
 

@@ -47,19 +47,19 @@ The footer's letter-spaced text places some fragments within tolerance of the de
 
 Confirmed against a real statement. Matched with high confidence.
 
-| Type | Details format |
-|---|---|
-| `payment_received` | `Funds received from - {phone} {NAME}` |
-| `send_money` | `Customer Transfer to - {phone} {NAME}` |
-| `paybill_payment` | `Pay Bill to {shortcode} - {NAME} Acc. {account}` |
-| `paybill_payment` | `Pay Bill Online to {shortcode} - {NAME} Acc. {account}` |
-| `till_payment` | `Merchant Payment to {till} - {MERCHANT}` |
-| `pochi_payment` | `Customer Payment to Small Business to - {phone} {NAME}` |
+| Type                    | Details format                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------- |
+| `payment_received`      | `Funds received from - {phone} {NAME}`                                            |
+| `send_money`            | `Customer Transfer to - {phone} {NAME}`                                           |
+| `paybill_payment`       | `Pay Bill to {shortcode} - {NAME} Acc. {account}`                                 |
+| `paybill_payment`       | `Pay Bill Online to {shortcode} - {NAME} Acc. {account}`                          |
+| `till_payment`          | `Merchant Payment to {till} - {MERCHANT}`                                         |
+| `pochi_payment`         | `Customer Payment to Small Business to - {phone} {NAME}`                          |
 | `unit_trust_investment` | `Unit Trust Invest To {shortcode} - {FUND} by M-PESA\UnitTrust` (marker stripped) |
-| `bundle_purchase` | `Customer Bundle Purchase to {shortcode}{PRODUCT} by - {phone} {NAME}` |
-| `airtime` | `Airtime Purchase` |
-| `charge` | `Customer Transfer of Funds Charge` |
-| `charge` | `Pay Bill Charge` |
+| `bundle_purchase`       | `Customer Bundle Purchase to {shortcode}{PRODUCT} by - {phone} {NAME}`            |
+| `airtime`               | `Airtime Purchase`                                                                |
+| `charge`                | `Customer Transfer of Funds Charge`                                               |
+| `charge`                | `Pay Bill Charge`                                                                 |
 
 Charge patterns are listed before the transactions they belong to. They do not
 currently collide, but the ordering guards against a future pattern being
@@ -154,7 +154,7 @@ beginning with a digit would break it, so these rows are always marked low
 confidence rather than trusted.
 
 **Charges at a statement boundary.** Resolved, as long as the earlier statement
-is available — see *Charges whose parent is in an earlier statement* above. A
+is available — see _Charges whose parent is in an earlier statement_ above. A
 charge is still reported as unlinked when the caller passes no callback, or
 when the previous month's statement was never saved.
 
@@ -168,7 +168,7 @@ Two people with the same name are now separated by phone number, but only when
 that name was seen with more than one number. Adding the phone to every key
 would split a single party in two, because the same person appears both with
 and without a number depending on the row. Two remaining gaps: two people who
-share a name *and* have no number on any row still group together, and one
+share a name _and_ have no number on any row still group together, and one
 person using two numbers now ranks as two parties.
 
 **Unit trust fund names.** The trailing `by M-PESA\UnitTrust` marker is
@@ -194,13 +194,13 @@ version mismatch.
 
 Four pages, August–September 2026, password protected.
 
-| | |
-|---|---|
-| Transactions parsed | 138 |
-| Unclassified (`unknown`) | 0 |
-| Low confidence | 7 (all bundle purchases, low by design) |
-| Issues | 2 |
-| Balance verified | No |
+|                          |                                         |
+| ------------------------ | --------------------------------------- |
+| Transactions parsed      | 138                                     |
+| Unclassified (`unknown`) | 0                                       |
+| Low confidence           | 7 (all bundle purchases, low by design) |
+| Issues                   | 2                                       |
+| Balance verified         | No                                      |
 
 Both issues trace to the same cause: a transaction that Safaricom **omitted
 from its own statement**. A charge appears with no parent, and the closing

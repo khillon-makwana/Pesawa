@@ -100,7 +100,9 @@ export class StatementBuilder {
         ? null
         : {
             receiptNo,
-            completedAt: new Date(`${completionTime.replace(' ', 'T')}+03:00`).toISOString(),
+            completedAt: new Date(
+              `${completionTime.replace(' ', 'T')}+03:00`
+            ).toISOString(),
             detailsRaw: options.details,
             type: options.type,
             direction: options.direction,
@@ -137,7 +139,11 @@ export class StatementBuilder {
     });
   }
 
-  sentMoney(amountInCents: number, recipientName: string, recipientPhone = '254798765432') {
+  sentMoney(
+    amountInCents: number,
+    recipientName: string,
+    recipientPhone = '254798765432'
+  ) {
     return this.addRow({
       details: `Customer Transfer to - ${recipientPhone} ${recipientName}`,
       amountInCents,
@@ -192,15 +198,11 @@ export class StatementBuilder {
     });
   }
 
-    /**
+  /**
    * Pochi la Biashara — payment to a small trader's till, which is tied to a
    * phone number rather than a till number.
    */
-  pochiPayment(
-    amountInCents: number,
-    traderName: string,
-    traderPhone = '254700***102'
-  ) {
+  pochiPayment(amountInCents: number, traderName: string, traderPhone = '254700***102') {
     return this.addRow({
       details: `Customer Payment to Small Business to - ${traderPhone} ${traderName}`,
       amountInCents,

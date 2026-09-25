@@ -33,12 +33,13 @@ export function PrivacyToc({ sections }: { sections: { id: string; title: string
   }, [sections]);
 
   return (
-    <nav aria-label="On this page" className="rounded-lg border border-border bg-card p-4">
+    <nav
+      aria-label="On this page"
+      className="rounded-lg border border-border bg-card p-4"
+    >
       <p className="eyebrow flex items-baseline justify-between gap-2 border-b border-border pb-3 text-muted-foreground">
         <span>Table of contents</span>
-        <span>
-          {String(sections.length).padStart(2, '0')} sections
-        </span>
+        <span>{String(sections.length).padStart(2, '0')} sections</span>
       </p>
 
       <ol className="mt-3 space-y-1">

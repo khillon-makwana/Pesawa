@@ -14,8 +14,14 @@ import type { RawRow } from '../parser/types';
  */
 
 const PEOPLE = [
-  'ASHA WAMBUI', 'DAVID OCHIENG', 'GRACE KIPROTICH', 'JOSEPH MUTUA',
-  'LINDA ACHIENG', 'PETER NJOROGE', 'SARAH WANGARI', 'BRIAN OTIENO'
+  'ASHA WAMBUI',
+  'DAVID OCHIENG',
+  'GRACE KIPROTICH',
+  'JOSEPH MUTUA',
+  'LINDA ACHIENG',
+  'PETER NJOROGE',
+  'SARAH WANGARI',
+  'BRIAN OTIENO'
 ];
 
 const MERCHANTS = [
@@ -117,7 +123,7 @@ export function generateSampleStatement(options: SampleOptions = {}): SampleStat
     return { receiptNo, completionTime };
   }
 
-    while (rows.length < targetCount) {
+  while (rows.length < targetCount) {
     const roll = random();
 
     // A real M-PESA balance never goes negative, so force money in whenever
@@ -143,7 +149,13 @@ export function generateSampleStatement(options: SampleOptions = {}): SampleStat
         amount,
         'out'
       );
-      addRow('Customer Transfer of Funds Charge', amount > 100_00 ? 13_00 : 7_00, 'out', receiptNo, completionTime);
+      addRow(
+        'Customer Transfer of Funds Charge',
+        amount > 100_00 ? 13_00 : 7_00,
+        'out',
+        receiptNo,
+        completionTime
+      );
       continue;
     }
 

@@ -10,8 +10,7 @@ const STATEMENT_TIMEZONE_OFFSET = '+03:00';
 const REVENUE_TYPES = new Set(['payment_received']);
 
 export type RowParseOutcome =
-  | { ok: true; transaction: Transaction }
-  | { ok: false; reason: string };
+  { ok: true; transaction: Transaction } | { ok: false; reason: string };
 
 /**
  * "2026-06-05 16:30:45" -> "2026-06-05T16:30:45.000Z" (adjusted for EAT).

@@ -70,9 +70,17 @@ function drawTableHeader(page: PDFPage, font: PDFFont) {
   page.drawText('Balance', { x: 510, y: headerY, size: FONT_SIZE, font });
 }
 
-function drawPageFurniture(page: PDFPage, font: PDFFont, pageNumber: number, total: number) {
+function drawPageFurniture(
+  page: PDFPage,
+  font: PDFFont,
+  pageNumber: number,
+  total: number
+) {
   page.drawText(`Page ${pageNumber} of ${total}`, {
-    x: 525, y: 804, size: FONT_SIZE, font
+    x: 525,
+    y: 804,
+    size: FONT_SIZE,
+    font
   });
 
   page.drawText(
@@ -81,7 +89,11 @@ function drawPageFurniture(page: PDFPage, font: PDFFont, pageNumber: number, tot
   );
 
   page.drawText('SAMPLE STATEMENT - FICTIONAL DATA', {
-    x: 39, y: 100, size: 8, font, color: rgb(0.6, 0.1, 0.1)
+    x: 39,
+    y: 100,
+    size: 8,
+    font,
+    color: rgb(0.6, 0.1, 0.1)
   });
 }
 
@@ -93,8 +105,8 @@ export async function renderSampleStatementPdf(
   const font = await document.embedFont(StandardFonts.Helvetica);
 
   // Lay out rows across pages first, so the page count is known before drawing
-  const pages: Array<Array<{ row: typeof sample.rows[0]; detailLines: string[] }>> = [];
-  let currentPage: Array<{ row: typeof sample.rows[0]; detailLines: string[] }> = [];
+  const pages: Array<Array<{ row: (typeof sample.rows)[0]; detailLines: string[] }>> = [];
+  let currentPage: Array<{ row: (typeof sample.rows)[0]; detailLines: string[] }> = [];
   let y = TOP_Y;
 
   for (const row of sample.rows) {
@@ -123,9 +135,24 @@ export async function renderSampleStatementPdf(
     let rowY = TOP_Y;
 
     for (const { row, detailLines } of pageRows) {
-      page.drawText(row.receiptNo, { x: COLUMN_LEFT.receipt, y: rowY, size: FONT_SIZE, font });
-      page.drawText(row.completionTime, { x: COLUMN_LEFT.time, y: rowY, size: FONT_SIZE, font });
-      page.drawText(row.status, { x: COLUMN_LEFT.status, y: rowY, size: FONT_SIZE, font });
+      page.drawText(row.receiptNo, {
+        x: COLUMN_LEFT.receipt,
+        y: rowY,
+        size: FONT_SIZE,
+        font
+      });
+      page.drawText(row.completionTime, {
+        x: COLUMN_LEFT.time,
+        y: rowY,
+        size: FONT_SIZE,
+        font
+      });
+      page.drawText(row.status, {
+        x: COLUMN_LEFT.status,
+        y: rowY,
+        size: FONT_SIZE,
+        font
+      });
 
       if (row.paidIn !== '') {
         drawRightAligned(page, row.paidIn, COLUMN_RIGHT.paidIn, rowY, font);

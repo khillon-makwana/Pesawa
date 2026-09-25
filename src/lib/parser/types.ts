@@ -24,12 +24,12 @@ export type Confidence = 'high' | 'low';
 /** A single parsed line from a statement. */
 export interface Transaction {
   receiptNo: string;
-  completedAt: string;        // ISO 8601
-  detailsRaw: string;         // untouched source text
+  completedAt: string; // ISO 8601
+  detailsRaw: string; // untouched source text
   type: TransactionType;
   direction: Direction;
-  amount: number;             // CENTS, always positive
-  balanceAfter: number;       // CENTS
+  amount: number; // CENTS, always positive
+  balanceAfter: number; // CENTS
   isRevenue: boolean;
   counterpartyName: string | null;
   counterpartyPhone: string | null;
@@ -50,8 +50,8 @@ export interface ParseIssue {
 export interface StatementMeta {
   periodStart: string;
   periodEnd: string;
-  openingBalance: number;     // CENTS
-  closingBalance: number;     // CENTS
+  openingBalance: number; // CENTS
+  closingBalance: number; // CENTS
   accountLabel: string | null;
   balanceVerified: boolean;
   parserVersion: string;
@@ -71,12 +71,12 @@ export interface ParseResult {
  */
 export interface RawRow {
   receiptNo: string;
-  completionTime: string;   // "2024-01-15 14:32:07"
+  completionTime: string; // "2024-01-15 14:32:07"
   details: string;
-  status: string;           // "Completed" | "Failed"
-  paidIn: string;           // "1,500.00" or ""
-  withdrawn: string;        // "-500.00" or ""
-  balance: string;          // "12,340.50"
+  status: string; // "Completed" | "Failed"
+  paidIn: string; // "1,500.00" or ""
+  withdrawn: string; // "-500.00" or ""
+  balance: string; // "12,340.50"
   page: number;
 }
 
@@ -86,8 +86,8 @@ export interface RawRow {
  */
 export interface PositionedTextItem {
   text: string;
-  x: number;       // left edge
-  right: number;   // right edge — amounts are right-aligned, so this identifies them
-  y: number;       // baseline
+  x: number; // left edge
+  right: number; // right edge — amounts are right-aligned, so this identifies them
+  y: number; // baseline
   page: number;
 }

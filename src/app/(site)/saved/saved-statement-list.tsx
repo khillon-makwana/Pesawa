@@ -40,7 +40,11 @@ export function SavedStatementList({
               Delete every saved statement and transaction from this browser? This cannot
               be undone.
             </p>
-            <Button variant="outline" size="sm" onClick={() => setConfirmingDeleteAll(false)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmingDeleteAll(false)}
+            >
               Cancel
             </Button>
             <Button size="sm" onClick={onDeleteAll}>
@@ -52,7 +56,11 @@ export function SavedStatementList({
             <p className="flex-1 text-sm text-muted-foreground">
               Everything here is stored only in this browser.
             </p>
-            <Button variant="outline" size="sm" onClick={() => setConfirmingDeleteAll(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmingDeleteAll(true)}
+            >
               Delete all my data
             </Button>
           </div>
@@ -90,7 +98,8 @@ function StatementRow({
         <p className="truncate font-medium">{statement.fileName}</p>
         <p className="tabular mt-1 font-mono text-xs text-muted-foreground">
           {formatDate(statement.periodStart)} – {formatDate(statement.periodEnd)} ·{' '}
-          {statement.transactionCount} transactions · saved {formatDate(statement.savedAt)}
+          {statement.transactionCount} transactions · saved{' '}
+          {formatDate(statement.savedAt)}
         </p>
       </div>
 

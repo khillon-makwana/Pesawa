@@ -4,7 +4,10 @@ import { useState } from 'react';
 import type { ParseResult } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
 import Link from 'next/link';
-import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
+import {
+  buildTransactionsCsv,
+  buildIssuesCsv
+} from '@/lib/export/build-transactions-csv';
 import { downloadCsv } from '@/lib/export/download-csv';
 import { loadParentReceiptNumbers, saveStatement } from '@/lib/storage/saved-statements';
 import { getStorageMode } from '@/lib/storage/statement-database';
@@ -13,7 +16,12 @@ import { ReceiptPreview } from '@/components/marketing/receipt-preview';
 import { StatisticsBand } from '@/components/marketing/statistics-band';
 import { SiteContainer } from '@/components/site-container';
 import { SessionOnlyNotice } from '@/components/storage-notice';
-import { DocumentGlyph, PlayGlyph, WarningGlyph, DownloadGlyph } from '@/components/icons';
+import {
+  DocumentGlyph,
+  PlayGlyph,
+  WarningGlyph,
+  DownloadGlyph
+} from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 
@@ -80,7 +88,9 @@ export function UploadStatementView() {
         setScreen({
           name: 'done',
           result: outcome.result,
-          fileName: withDefect ? 'sample-statement-with-defect.pdf' : 'sample-statement.pdf'
+          fileName: withDefect
+            ? 'sample-statement-with-defect.pdf'
+            : 'sample-statement.pdf'
         });
         return;
       }
@@ -143,11 +153,14 @@ export function UploadStatementView() {
               />
 
               <p className="mt-6 flex items-start gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
-                <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--color-money-in)]" />
+                <span
+                  aria-hidden
+                  className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--color-money-in)]"
+                />
                 <span>
-                  Read in your browser. The file and its password never leave this
-                  device. You can then save the result in this browser if you want it
-                  next time, and delete it whenever you like.{' '}
+                  Read in your browser. The file and its password never leave this device.
+                  You can then save the result in this browser if you want it next time,
+                  and delete it whenever you like.{' '}
                   <Link href="/privacy" className="underline underline-offset-4">
                     How this works
                   </Link>
@@ -285,7 +298,13 @@ type SaveState =
   | { name: 'saved'; savedCount: number; duplicateCount: number; isSessionOnly: boolean }
   | { name: 'failed'; message: string };
 
-function StatementSummary({ result, fileName }: { result: ParseResult; fileName: string }) {
+function StatementSummary({
+  result,
+  fileName
+}: {
+  result: ParseResult;
+  fileName: string;
+}) {
   const { meta, transactions, issues } = result;
   const [saveState, setSaveState] = useState<SaveState>({ name: 'idle' });
 
@@ -325,11 +344,17 @@ function StatementSummary({ result, fileName }: { result: ParseResult; fileName:
       transactions={transactions}
       issues={issues}
       above={
-        getStorageMode() === 'session-only' ? <SessionOnlyNotice className="mt-8" /> : undefined
+        getStorageMode() === 'session-only' ? (
+          <SessionOnlyNotice className="mt-8" />
+        ) : undefined
       }
       actions={
         <>
-          <Button variant="outline" size="sm" onClick={() => handleExport('transactions')}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleExport('transactions')}
+          >
             <DownloadGlyph /> Download CSV
           </Button>
 
@@ -373,4 +398,3 @@ function StatementSummary({ result, fileName }: { result: ParseResult; fileName:
     />
   );
 }
-

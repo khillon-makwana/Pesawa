@@ -2,7 +2,11 @@ import type { PositionedTextItem } from './types';
 
 export type PdfExtractionOutcome =
   | { ok: true; items: PositionedTextItem[]; pageCount: number }
-  | { ok: false; reason: 'wrong_password' | 'password_required' | 'invalid_pdf'; detail: string };
+  | {
+      ok: false;
+      reason: 'wrong_password' | 'password_required' | 'invalid_pdf';
+      detail: string;
+    };
 
 /**
  * Opens a (possibly encrypted) PDF and returns every text fragment with its
@@ -88,13 +92,18 @@ function mapExtractionError(error: unknown): PdfExtractionOutcome {
   if (name === 'PasswordException') {
     // pdf.js: 1 = password needed, 2 = password incorrect
     return code === 1
-      ? { ok: false, reason: 'password_required', detail: 'This statement is password protected.' }
+      ? {
+          ok: false,
+          reason: 'password_required',
+          detail: 'This statement is password protected.'
+        }
       : { ok: false, reason: 'wrong_password', detail: 'That password did not work.' };
   }
 
   return {
     ok: false,
     reason: 'invalid_pdf',
-    detail: error instanceof Error ? error.message : 'The file could not be read as a PDF.'
+    detail:
+      error instanceof Error ? error.message : 'The file could not be read as a PDF.'
   };
 }

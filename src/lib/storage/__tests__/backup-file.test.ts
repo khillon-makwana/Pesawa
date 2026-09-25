@@ -185,7 +185,9 @@ describe('rejecting a file that is not a backup', () => {
         schemaVersion: BACKUP_SCHEMA_VERSION,
         exportedAt: '2026-09-25',
         statements: [],
-        transactions: [{ ...buildTransaction({ amount: 400.5 }), key: 'k', statementIds: [] }]
+        transactions: [
+          { ...buildTransaction({ amount: 400.5 }), key: 'k', statementIds: [] }
+        ]
       })
     );
 

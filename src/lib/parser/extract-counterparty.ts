@@ -46,7 +46,11 @@ function extractFromPayBill(details: string): ExtractedCounterparty {
   // Some paybills carry no account number.
   const withoutAccount = details.match(/-\s*(.+)$/);
   if (withoutAccount) {
-    return { name: normaliseWhitespace(withoutAccount[1]), phone: null, confidence: 'high' };
+    return {
+      name: normaliseWhitespace(withoutAccount[1]),
+      phone: null,
+      confidence: 'high'
+    };
   }
 
   return { name: null, phone: null, confidence: 'low' };
@@ -98,7 +102,9 @@ function extractFromUnitTrust(details: string): ExtractedCounterparty {
  * the account holder.
  */
 function extractFromBundlePurchase(details: string): ExtractedCounterparty {
-  const match = details.match(/Bundle Purchase to\s*(\d+)([^]*?)\s+by\s*-\s*(\d[\d*\s]{6,})/i);
+  const match = details.match(
+    /Bundle Purchase to\s*(\d+)([^]*?)\s+by\s*-\s*(\d[\d*\s]{6,})/i
+  );
   if (!match) {
     return { name: null, phone: null, confidence: 'low' };
   }
@@ -137,10 +143,10 @@ export function extractCounterparty(
       return extractFromBundlePurchase(normalised);
 
     case 'pochi_payment':
-      return extractFromPersonTransfer(normalised);   // "to - 254700***101 JAMES KIPTOO"
+      return extractFromPersonTransfer(normalised); // "to - 254700***101 JAMES KIPTOO"
 
     case 'unit_trust_investment':
-      return extractFromUnitTrust(normalised);        // "To 4145555 - ZIIDI MMF by ..."
+      return extractFromUnitTrust(normalised); // "To 4145555 - ZIIDI MMF by ..."
 
     case 'charge':
     case 'airtime':

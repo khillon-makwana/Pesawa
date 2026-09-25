@@ -95,7 +95,10 @@ describe('parseStatementRows', () => {
       .unrecognisedFormat()
       .build();
 
-    const { transactions, isBalanceVerified } = parseStatementRows(rows, meta.openingBalance);
+    const { transactions, isBalanceVerified } = parseStatementRows(
+      rows,
+      meta.openingBalance
+    );
 
     expect(transactions).toHaveLength(2);
     expect(transactions[1].type).toBe('unknown');
@@ -128,5 +131,4 @@ describe('parseStatementRows', () => {
     expect(result.issues).toEqual([]);
     expect(result.isBalanceVerified).toBe(true);
   });
-
 });

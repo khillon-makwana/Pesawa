@@ -77,8 +77,14 @@ describe('rankCounterparties', () => {
 
   it('records the first and last time a party appears', () => {
     const [party] = rankCounterparties([
-      buildTransaction({ counterpartyName: 'X', completedAt: '2026-08-27T10:00:00.000Z' }),
-      buildTransaction({ counterpartyName: 'X', completedAt: '2026-08-01T10:00:00.000Z' }),
+      buildTransaction({
+        counterpartyName: 'X',
+        completedAt: '2026-08-27T10:00:00.000Z'
+      }),
+      buildTransaction({
+        counterpartyName: 'X',
+        completedAt: '2026-08-01T10:00:00.000Z'
+      }),
       buildTransaction({ counterpartyName: 'X', completedAt: '2026-08-15T10:00:00.000Z' })
     ]);
 

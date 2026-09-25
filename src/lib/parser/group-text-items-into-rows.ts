@@ -66,10 +66,14 @@ function groupItemsIntoLines(items: PositionedTextItem[]): PositionedTextItem[][
  */
 function isTransactionRowStart(line: PositionedTextItem[]): boolean {
   const hasReceipt = line.some(
-    item => isNear(item.x, COLUMN_LEFT_EDGES.receipt) && RECEIPT_NUMBER_PATTERN.test(item.text.trim())
+    item =>
+      isNear(item.x, COLUMN_LEFT_EDGES.receipt) &&
+      RECEIPT_NUMBER_PATTERN.test(item.text.trim())
   );
   const hasTime = line.some(
-    item => isNear(item.x, COLUMN_LEFT_EDGES.completionTime) && COMPLETION_TIME_PATTERN.test(item.text.trim())
+    item =>
+      isNear(item.x, COLUMN_LEFT_EDGES.completionTime) &&
+      COMPLETION_TIME_PATTERN.test(item.text.trim())
   );
   return hasReceipt && hasTime;
 }

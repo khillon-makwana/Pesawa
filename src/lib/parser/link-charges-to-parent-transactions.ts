@@ -34,10 +34,7 @@ export function linkChargesToParentTransactions(
     // A charge usually follows its parent, but Safaricom sometimes deducts a
     // paybill fee before the payment itself, putting the parent after. Check
     // the rows on both sides.
-    const neighbours = [
-      orderedTransactions[index - 1],
-      orderedTransactions[index + 1]
-    ];
+    const neighbours = [orderedTransactions[index - 1], orderedTransactions[index + 1]];
 
     const parent = neighbours.find(
       neighbour =>

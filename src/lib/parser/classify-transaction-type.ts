@@ -25,17 +25,17 @@ function normaliseDetailsForMatching(details: string): string {
  */
 const VERIFIED_PATTERNS: ClassificationPattern[] = [
   { pattern: /^Customer Transfer of Funds Charge/i, type: 'charge' },
-  { pattern: /^Pay Bill Charge/i,                   type: 'charge' },
+  { pattern: /^Pay Bill Charge/i, type: 'charge' },
 
   { pattern: /^Customer Payment to Small Business/i, type: 'pochi_payment' },
-  { pattern: /^Unit Trust Invest To/i,               type: 'unit_trust_investment' },
-  
-  { pattern: /^Funds received from/i,               type: 'payment_received' },
-  { pattern: /^Customer Transfer to\b/i,            type: 'send_money' },
-  { pattern: /^Pay Bill (Online )?to\b/i,           type: 'paybill_payment' },
-  { pattern: /^Merchant Payment to\b/i,             type: 'till_payment' },
-  { pattern: /^Customer Bundle Purchase\b/i,        type: 'bundle_purchase' },
-  { pattern: /^Airtime Purchase/i,                  type: 'airtime' }
+  { pattern: /^Unit Trust Invest To/i, type: 'unit_trust_investment' },
+
+  { pattern: /^Funds received from/i, type: 'payment_received' },
+  { pattern: /^Customer Transfer to\b/i, type: 'send_money' },
+  { pattern: /^Pay Bill (Online )?to\b/i, type: 'paybill_payment' },
+  { pattern: /^Merchant Payment to\b/i, type: 'till_payment' },
+  { pattern: /^Customer Bundle Purchase\b/i, type: 'bundle_purchase' },
+  { pattern: /^Airtime Purchase/i, type: 'airtime' }
 ];
 
 /**
@@ -44,11 +44,11 @@ const VERIFIED_PATTERNS: ClassificationPattern[] = [
  * Move a pattern into VERIFIED_PATTERNS once a real example confirms it.
  */
 const PROVISIONAL_PATTERNS: ClassificationPattern[] = [
-  { pattern: /fuliza.*repay/i,        type: 'fuliza_repayment' },
-  { pattern: /fuliza/i,               type: 'fuliza_loan' },
-  { pattern: /deposit.*agent/i,       type: 'agent_deposit' },
-  { pattern: /withdraw\w*.*agent/i,   type: 'agent_withdrawal' },
-  { pattern: /^revers/i,              type: 'reversal' }
+  { pattern: /fuliza.*repay/i, type: 'fuliza_repayment' },
+  { pattern: /fuliza/i, type: 'fuliza_loan' },
+  { pattern: /deposit.*agent/i, type: 'agent_deposit' },
+  { pattern: /withdraw\w*.*agent/i, type: 'agent_withdrawal' },
+  { pattern: /^revers/i, type: 'reversal' }
 ];
 
 /**

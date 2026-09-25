@@ -56,9 +56,7 @@ describe('summariseCharges', () => {
   });
 
   it('returns null rather than zero when there is no money in', () => {
-    const summary = summariseCharges([
-      buildTransaction({ type: 'charge', amount: 700 })
-    ]);
+    const summary = summariseCharges([buildTransaction({ type: 'charge', amount: 700 })]);
 
     expect(summary.shareOfMoneyInPercent).toBeNull();
   });

@@ -31,15 +31,23 @@ export function summariseCharges(transactions: Transaction[]): ChargesSummary {
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   const spendingExcludingChargesInCents = transactions
-    .filter(transaction => transaction.direction === 'out' && transaction.type !== 'charge')
+    .filter(
+      transaction => transaction.direction === 'out' && transaction.type !== 'charge'
+    )
     .reduce((total, transaction) => total + transaction.amount, 0);
 
   return {
     totalChargesInCents,
     chargeCount: charges.length,
     shareOfMoneyInPercent: toPercentOrNull(totalChargesInCents, moneyInInCents),
-    shareOfSpendingPercent: toPercentOrNull(totalChargesInCents, spendingExcludingChargesInCents),
-    largestChargeInCents: charges.reduce((largest, charge) => Math.max(largest, charge.amount), 0),
+    shareOfSpendingPercent: toPercentOrNull(
+      totalChargesInCents,
+      spendingExcludingChargesInCents
+    ),
+    largestChargeInCents: charges.reduce(
+      (largest, charge) => Math.max(largest, charge.amount),
+      0
+    ),
     averageChargeInCents:
       charges.length === 0 ? 0 : Math.round(totalChargesInCents / charges.length)
   };

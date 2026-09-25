@@ -176,7 +176,8 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                 <div className="mt-2 flex items-center justify-between gap-3 text-sm text-muted-foreground">
                   <TypeBadge transaction={transaction} />
                   <span className="tabular text-xs whitespace-nowrap">
-                    {formatDateTime(transaction.completedAt)} · {formatAmount(transaction.balanceAfter)}
+                    {formatDateTime(transaction.completedAt)} ·{' '}
+                    {formatAmount(transaction.balanceAfter)}
                   </span>
                 </div>
               </li>

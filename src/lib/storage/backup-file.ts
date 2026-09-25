@@ -71,8 +71,7 @@ export async function buildBackupFile(): Promise<BackupFile> {
 }
 
 export type BackupParseOutcome =
-  | { ok: true; backup: BackupFile }
-  | { ok: false; error: string };
+  { ok: true; backup: BackupFile } | { ok: false; error: string };
 
 /**
  * Reads a backup file's text and checks it really is one.
@@ -86,7 +85,10 @@ export function parseBackupFile(fileContents: string): BackupParseOutcome {
   try {
     rawData = JSON.parse(fileContents);
   } catch {
-    return { ok: false, error: 'This file is not valid JSON, so it is not a Pesawa backup.' };
+    return {
+      ok: false,
+      error: 'This file is not valid JSON, so it is not a Pesawa backup.'
+    };
   }
 
   const parsed = backupFileSchema.safeParse(rawData);

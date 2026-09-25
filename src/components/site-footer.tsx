@@ -16,7 +16,10 @@ export function SiteFooter() {
           <Link href="/saved" className="eyebrow transition-colors hover:text-foreground">
             Saved
           </Link>
-          <Link href="/privacy" className="eyebrow transition-colors hover:text-foreground">
+          <Link
+            href="/privacy"
+            className="eyebrow transition-colors hover:text-foreground"
+          >
             Privacy
           </Link>
           <span className="eyebrow">© {new Date().getFullYear()} Pesawa</span>
