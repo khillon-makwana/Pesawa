@@ -64,7 +64,9 @@ describe('summariseCharges', () => {
   });
 
   it('handles a statement with no charges', () => {
+    // Money did come in, so the share is a real zero rather than "unknown".
     const summary = summariseCharges([
+      buildTransaction({ type: 'payment_received', direction: 'in', amount: 40000 }),
       buildTransaction({ type: 'send_money', amount: 40000 })
     ]);
 
