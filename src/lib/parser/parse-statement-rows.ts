@@ -21,10 +21,14 @@ export interface StatementRowsParseResult {
  *
  * Expects rows in the order they appeared on the statement (newest first).
  * Returns transactions oldest first.
+ *
+ * `hasParentInEarlierStatements` is optional and passed straight to the charge
+ * linking step — see that file for what it is for.
  */
 export function parseStatementRows(
   statementOrderRows: RawRow[],
-  openingBalanceInCents: number
+  openingBalanceInCents: number,
+  hasParentInEarlierStatements?: (receiptNo: string) => boolean
 ): StatementRowsParseResult {
   const issues: ParseIssue[] = [];
   const parsedTransactions: Transaction[] = [];
@@ -47,7 +51,10 @@ export function parseStatementRows(
   const ordering = orderTransactionsChronologically(parsedTransactions);
   issues.push(...ordering.issues);
 
-  const linking = linkChargesToParentTransactions(ordering.transactions);
+  const linking = linkChargesToParentTransactions(
+    ordering.transactions,
+    hasParentInEarlierStatements
+  );
   issues.push(...linking.issues);
 
   const verification = verifyBalance(linking.transactions, openingBalanceInCents);

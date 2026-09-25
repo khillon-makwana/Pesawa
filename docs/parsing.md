@@ -82,8 +82,34 @@ Move a pattern into the verified set once a real example confirms it.
 A charge shares its parent transaction's receipt number and timestamp. It is
 therefore linked by adjacency once rows are chronologically ordered.
 
+Nothing stops a receipt number carrying more than one charge: `Customer
+Transfer of Funds Charge` and `Pay Bill Charge` are separate patterns with the
+same `charge` type, and the balance walk groups settlement bundles without a
+size limit. Anything keying on receipt number and type alone — deduplication,
+for instance — has to account for that.
+
 The charge usually follows its parent, but Safaricom deducts some paybill fees
 **before** the payment itself, putting the parent after. Both sides are checked.
+
+### Charges whose parent is in an earlier statement
+
+A charge in the first rows of a statement can have its parent in the previous
+month's file. `linkChargesToParentTransactions` takes an optional
+`hasParentInEarlierStatements(receiptNo)` callback for this, threaded through
+`parseStatementRows` and `parseStatementPdf`.
+
+It is a **synchronous predicate**, not a lookup. A charge already carries its
+parent's receipt number, so the only open question is whether that parent
+exists somewhere else; there is nothing to fetch. Keeping it synchronous is
+what stops storage concerns leaking into the pipeline — the caller loads what
+it needs first and then answers from memory.
+
+The in-statement search wins. The callback is consulted only when no adjacent
+row matches, so it cannot override a parent sitting right there.
+
+Callers must exclude charges when building the set of known receipt numbers.
+A charge shares its parent's receipt number, so including them would let a
+charge match itself and report as linked when its parent was never saved.
 
 ## Settlement bundles
 
@@ -127,11 +153,10 @@ run of digits. This is correct in every observed case, but a product name
 beginning with a digit would break it, so these rows are always marked low
 confidence rather than trusted.
 
-**Charges at a statement boundary.** A charge in the first rows of a statement
-may have its parent in the previous month's file. It is reported as unlinked.
-Planned: an optional lookup callback so the import service can resolve these
-against already-stored transactions, keeping the parser free of database
-imports.
+**Charges at a statement boundary.** Resolved, as long as the earlier statement
+is available — see *Charges whose parent is in an earlier statement* above. A
+charge is still reported as unlinked when the caller passes no callback, or
+when the previous month's statement was never saved.
 
 **Unit trust counterparty.** The `by M-PESA\UnitTrust` suffix is included in the
 extracted fund name. Stripping it would need a rule invented from a single

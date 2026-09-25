@@ -12,10 +12,17 @@ export interface ChargeLinkingResult {
  * directly after it once rows are in chronological order. So the parent is
  * simply the previous row with the same receipt number and a different type.
  *
+ * A charge in the first rows of a statement may have its parent in the previous
+ * month's file. `hasParentInEarlierStatements` lets the caller answer that from
+ * wherever it keeps old statements. It is a plain function taking a receipt
+ * number, which is what keeps this file free of any storage import — and so
+ * testable without one.
+ *
  * Expects chronologically ordered input.
  */
 export function linkChargesToParentTransactions(
-  orderedTransactions: Transaction[]
+  orderedTransactions: Transaction[],
+  hasParentInEarlierStatements?: (receiptNo: string) => boolean
 ): ChargeLinkingResult {
   const issues: ParseIssue[] = [];
 
@@ -40,6 +47,13 @@ export function linkChargesToParentTransactions(
     );
 
     if (parent === undefined) {
+      // Not in this statement, so ask the caller about earlier ones. A charge
+      // carries its parent's receipt number, so knowing the parent exists is
+      // enough to link it — there is nothing else to look up.
+      if (hasParentInEarlierStatements?.(transaction.receiptNo) === true) {
+        return { ...transaction, chargeForReceipt: transaction.receiptNo };
+      }
+
       issues.push({
         type: 'unparsed_row',
         page: transaction.sourcePage,
@@ -54,19 +68,3 @@ export function linkChargesToParentTransactions(
 
   return { transactions, issues };
 }
-
-/**
- * Fills in `chargeForReceipt` on charge rows.
- *
- * A charge shares its parent's receipt number and sits adjacent to it once
- * rows are chronologically ordered — usually after, but before it for some
- * paybill fees, so both sides are checked.
- *
- * A charge at the very start of a statement has its parent in the previous
- * month's file and cannot be linked here. Planned: accept an optional
- * `findParentInPreviousStatements` callback so the import service can resolve
- * these against already-stored transactions. The callback keeps this file free
- * of database imports, which is what makes it testable without one.
- *
- * Expects chronologically ordered input.
- */

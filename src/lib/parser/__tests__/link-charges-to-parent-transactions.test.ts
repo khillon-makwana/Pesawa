@@ -89,4 +89,44 @@ describe('linkChargesToParentTransactions', () => {
   it('handles an empty statement', () => {
     expect(linkChargesToParentTransactions([]).transactions).toEqual([]);
   });
+
+  describe('when the parent is in an earlier statement', () => {
+    it('links the charge if the caller knows the parent', () => {
+      const { transactions, issues } = linkChargesToParentTransactions(
+        [buildTransaction({ receiptNo: 'SAMPLE0A04', type: 'charge', amount: 700 })],
+        receiptNo => receiptNo === 'SAMPLE0A04'
+      );
+
+      expect(issues).toHaveLength(0);
+      expect(transactions[0].chargeForReceipt).toBe('SAMPLE0A04');
+    });
+
+    it('still reports the charge if the caller does not know the parent', () => {
+      const { transactions, issues } = linkChargesToParentTransactions(
+        [buildTransaction({ receiptNo: 'SAMPLE0A04', type: 'charge', amount: 700 })],
+        () => false
+      );
+
+      expect(issues).toHaveLength(1);
+      expect(transactions[0].chargeForReceipt).toBeNull();
+    });
+
+    it('prefers a parent in this statement over asking the caller', () => {
+      const askedAbout: string[] = [];
+
+      const { transactions } = linkChargesToParentTransactions(
+        [
+          buildTransaction({ receiptNo: 'SAMPLE0A03', type: 'send_money' }),
+          buildTransaction({ receiptNo: 'SAMPLE0A03', type: 'charge', amount: 700 })
+        ],
+        receiptNo => {
+          askedAbout.push(receiptNo);
+          return true;
+        }
+      );
+
+      expect(askedAbout).toEqual([]);
+      expect(transactions[1].chargeForReceipt).toBe('SAMPLE0A03');
+    });
+  });
 });

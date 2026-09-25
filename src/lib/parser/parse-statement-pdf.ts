@@ -17,10 +17,16 @@ export type StatementParseOutcome =
  * The opening balance is derived from the oldest row: its balance minus its
  * own effect. Safaricom prints an opening balance in the summary section, and
  * cross-checking against it is a later improvement.
+ *
+ * `hasParentInEarlierStatements` is optional. Pass it to link charges whose
+ * parent transaction sits in a statement read earlier. It must be synchronous,
+ * so a caller reading from storage should load what it needs first and then
+ * answer from memory.
  */
 export async function parseStatementPdf(
   fileBytes: ArrayBuffer,
-  password?: string
+  password?: string,
+  hasParentInEarlierStatements?: (receiptNo: string) => boolean
 ): Promise<StatementParseOutcome> {
   const extraction = await decryptAndExtractTextItems(fileBytes, password);
 
@@ -42,7 +48,11 @@ export async function parseStatementPdf(
   const oldestRow = rows[rows.length - 1];
   const openingBalanceInCents = deriveOpeningBalanceInCents(oldestRow);
 
-  const parsed = parseStatementRows(rows, openingBalanceInCents);
+  const parsed = parseStatementRows(
+    rows,
+    openingBalanceInCents,
+    hasParentInEarlierStatements
+  );
   const transactions = parsed.transactions;
 
   return {

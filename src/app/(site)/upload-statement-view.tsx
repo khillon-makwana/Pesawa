@@ -6,9 +6,12 @@ import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
 import Link from 'next/link';
 import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
 import { downloadCsv } from '@/lib/export/download-csv';
+import { loadParentReceiptNumbers, saveStatement } from '@/lib/storage/saved-statements';
+import { getStorageMode } from '@/lib/storage/statement-database';
 import { StatementReport } from '@/components/statement/statement-report';
 import { ReceiptPreview } from '@/components/marketing/receipt-preview';
 import { SiteContainer } from '@/components/site-container';
+import { SessionOnlyNotice } from '@/components/storage-notice';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 
@@ -27,7 +30,16 @@ export function UploadStatementView() {
   async function parse(file: File, submittedPassword?: string) {
     setScreen({ name: 'parsing' });
 
-    const outcome = await parseStatementPdf(await file.arrayBuffer(), submittedPassword);
+    // Loaded up front so the parser can be given a plain synchronous answer.
+    // This links charges whose parent transaction is in a statement saved
+    // earlier — common when a fee lands at the very start of a month.
+    const parentReceipts = await loadParentReceiptNumbers();
+
+    const outcome = await parseStatementPdf(
+      await file.arrayBuffer(),
+      submittedPassword,
+      receiptNo => parentReceipts.has(receiptNo)
+    );
 
     if (outcome.ok) {
       setPassword('');
@@ -57,7 +69,10 @@ export function UploadStatementView() {
     try {
       const response = await fetch(path);
       const bytes = await response.arrayBuffer();
-      const outcome = await parseStatementPdf(bytes, '123456');
+      const parentReceipts = await loadParentReceiptNumbers();
+      const outcome = await parseStatementPdf(bytes, '123456', receiptNo =>
+        parentReceipts.has(receiptNo)
+      );
 
       if (outcome.ok) {
         setScreen({
@@ -128,7 +143,9 @@ export function UploadStatementView() {
               <p className="mt-6 flex items-start gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
                 <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--color-money-in)]" />
                 <span>
-                  Read in your browser. The file and its password never leave this device.{' '}
+                  Read in your browser. The file and its password never leave this
+                  device. You can then save the result in this browser if you want it
+                  next time, and delete it whenever you like.{' '}
                   <Link href="/privacy" className="underline underline-offset-4">
                     How this works
                   </Link>
@@ -280,7 +297,7 @@ function StatisticsBand() {
       label: 'Where it runs',
       figure: 'Your browser',
       detail:
-        'The PDF and its password stay on this device. There is no account to create and no server to store anything.'
+        'The PDF and its password stay on this device. Nothing is sent to a server, and anything you save stays in this browser.'
     }
   ];
 
@@ -307,8 +324,39 @@ function StatisticsBand() {
   );
 }
 
+/*
+ * Saving is deliberately opt-in. Parsing a statement shows you the report; it
+ * does not put anything in storage until you ask for it here.
+ */
+type SaveState =
+  | { name: 'idle' }
+  | { name: 'saving' }
+  | { name: 'saved'; savedCount: number; duplicateCount: number; isSessionOnly: boolean }
+  | { name: 'failed'; message: string };
+
 function StatementSummary({ result, fileName }: { result: ParseResult; fileName: string }) {
   const { meta, transactions, issues } = result;
+  const [saveState, setSaveState] = useState<SaveState>({ name: 'idle' });
+
+  async function handleSave() {
+    setSaveState({ name: 'saving' });
+
+    try {
+      const outcome = await saveStatement(result, fileName);
+
+      setSaveState({
+        name: 'saved',
+        savedCount: outcome.savedCount,
+        duplicateCount: outcome.duplicateCount,
+        isSessionOnly: getStorageMode() === 'session-only'
+      });
+    } catch {
+      setSaveState({
+        name: 'failed',
+        message: 'This browser would not let Pesawa store the statement.'
+      });
+    }
+  }
 
   function handleExport(what: 'transactions' | 'issues') {
     const baseName = fileName.replace(/\.pdf$/i, '');
@@ -325,6 +373,9 @@ function StatementSummary({ result, fileName }: { result: ParseResult; fileName:
       meta={meta}
       transactions={transactions}
       issues={issues}
+      above={
+        getStorageMode() === 'session-only' ? <SessionOnlyNotice className="mt-8" /> : undefined
+      }
       actions={
         <>
           <Button variant="outline" size="sm" onClick={() => handleExport('transactions')}>
@@ -335,6 +386,36 @@ function StatementSummary({ result, fileName }: { result: ParseResult; fileName:
             <Button variant="outline" size="sm" onClick={() => handleExport('issues')}>
               Download issues
             </Button>
+          )}
+
+          {saveState.name === 'idle' && (
+            <Button size="sm" onClick={() => void handleSave()}>
+              Save on this device
+            </Button>
+          )}
+
+          {saveState.name === 'saving' && (
+            <p className="text-sm text-muted-foreground">Saving…</p>
+          )}
+
+          {saveState.name === 'saved' && (
+            <p className="text-sm text-[var(--color-money-in)]">
+              Saved {saveState.savedCount} transaction
+              {saveState.savedCount === 1 ? '' : 's'} in this browser
+              {saveState.duplicateCount > 0 &&
+                `, skipped ${saveState.duplicateCount} already saved`}
+              .{' '}
+              <Link href="/saved" className="underline underline-offset-4">
+                Saved statements
+              </Link>
+              {saveState.isSessionOnly && ' — for this visit only, see the notice above.'}
+            </p>
+          )}
+
+          {saveState.name === 'failed' && (
+            <p className="text-sm text-destructive" role="alert">
+              {saveState.message}
+            </p>
           )}
         </>
       }

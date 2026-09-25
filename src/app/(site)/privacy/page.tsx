@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { SiteContainer } from '@/components/site-container';
 import { PrivacyToc } from './privacy-toc';
 
@@ -33,29 +34,61 @@ const SECTIONS: { id: string; title: string; body: ReactNode }[] = [
     )
   },
   {
-    id: 'nothing-is-stored',
-    title: 'Nothing is stored anywhere',
+    id: 'nothing-is-sent',
+    title: 'Nothing is sent to a server',
     body: (
       <>
         <p>
-          There are no accounts and no database. Nothing you open here is written to a
-          server, because there is no server to write to — the site is static files and
-          the work happens in this tab. Close the tab and the data is gone.
+          There are no accounts and no database behind this site. Nothing you open here
+          is uploaded, because there is nowhere for it to go — the site is static files
+          and all the work happens in this tab.
+        </p>
+        <p>
+          Saving is optional. If you choose to save a statement, it is written to
+          storage inside this browser and goes no further. A different browser, or a
+          different device, will not have it.
         </p>
 
         <Matrix
           rows={[
-            { label: 'The PDF itself', value: 'Never leaves this device', tone: 'good' },
+            { label: 'The PDF itself', value: 'Never stored, never sent', tone: 'good' },
             { label: 'The statement password', value: 'Used once, discarded', tone: 'good' },
             {
-              label: 'Parsed transactions',
+              label: 'Parsed transactions, not saved',
               value: 'Gone when you close the tab',
               tone: 'good'
+            },
+            {
+              label: 'Parsed transactions, saved',
+              value: 'In this browser until you delete them',
+              tone: 'neutral'
             },
             { label: 'Accounts and sign-in', value: 'None', tone: 'good' },
             { label: 'Cookies and trackers', value: 'None', tone: 'good' }
           ]}
         />
+      </>
+    )
+  },
+  {
+    id: 'deleting-your-data',
+    title: 'Deleting your data',
+    body: (
+      <>
+        <p>
+          Saved statements are listed on the{' '}
+          <Link href="/saved" className="underline underline-offset-4">
+            saved statements
+          </Link>{' '}
+          page. Each one can be deleted on its own, and{' '}
+          <strong className="font-medium text-foreground">Delete all my data</strong> on
+          that page clears every statement and transaction from this browser in one go.
+          Both take effect immediately and cannot be undone.
+        </p>
+        <p>
+          Clearing your browser&apos;s site data removes it too, as does any setting that
+          clears storage when you close the browser.
+        </p>
       </>
     )
   },
@@ -135,8 +168,8 @@ export default function PrivacyPage() {
               <span aria-hidden className="text-accent-bright">
                 ■
               </span>
-              Portfolio project · Client-side PDF parsing · No accounts, no cookies, no
-              trackers.
+              Portfolio project · Client-side PDF parsing · Nothing sent to a server ·
+              No accounts, no cookies, no trackers.
             </p>
           </article>
         </div>

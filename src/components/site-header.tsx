@@ -24,6 +24,9 @@ export function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-1 text-sm">
+          <Link href="/saved" className={NAV_LINK}>
+            Saved
+          </Link>
           <Link href="/privacy" className={NAV_LINK}>
             Privacy
           </Link>

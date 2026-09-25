@@ -13,6 +13,9 @@ export function SiteFooter() {
         </p>
 
         <nav className="flex items-center gap-4">
+          <Link href="/saved" className="eyebrow transition-colors hover:text-foreground">
+            Saved
+          </Link>
           <Link href="/privacy" className="eyebrow transition-colors hover:text-foreground">
             Privacy
           </Link>
