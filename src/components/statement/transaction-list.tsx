@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { Transaction } from '@/lib/parser/types';
+import { keyTransactions } from '@/lib/storage/find-new-transactions';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -106,14 +107,22 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
    * The charge rows carry the receipt they belong to, so searching a receipt
    * turns up both the payment and its fee.
    */
+  /*
+   * Keys come from the whole list, before any filtering, so a row keeps the
+   * same key as the filter changes. Receipt number and type alone would not do:
+   * two charges on one receipt for the same amount are separate rows, and React
+   * needs to tell them apart.
+   */
+  const keyedTransactions = useMemo(() => keyTransactions(transactions), [transactions]);
+
   const visible = useMemo(() => {
     const needle = filter.trim().toLowerCase();
 
     if (needle === '') {
-      return transactions;
+      return keyedTransactions;
     }
 
-    return transactions.filter(transaction =>
+    return keyedTransactions.filter(({ transaction }) =>
       [
         transaction.counterpartyName,
         transaction.receiptNo,
@@ -123,9 +132,9 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         .filter(value => value !== null)
         .some(value => value.toLowerCase().includes(needle))
     );
-  }, [transactions, filter]);
+  }, [keyedTransactions, filter]);
 
-  const hasCharges = visible.some(transaction => transaction.type === 'charge');
+  const hasCharges = visible.some(({ transaction }) => transaction.type === 'charge');
 
   return (
     <section>
@@ -155,8 +164,8 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         <>
           {/* Mobile: one card per transaction. Five columns will not fit 375px. */}
           <ul className="divide-y divide-border rounded-lg border border-border bg-card md:hidden">
-            {visible.map(transaction => (
-              <li key={`${transaction.receiptNo}-${transaction.type}`} className="p-4">
+            {visible.map(({ transaction, key }) => (
+              <li key={key} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <span className="min-w-0 flex-1 truncate font-medium">
                     {counterpartyLabel(transaction)}
@@ -200,11 +209,8 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {visible.map((transaction, index) => (
-                  <tr
-                    key={`${transaction.receiptNo}-${transaction.type}`}
-                    className="transition-colors hover:bg-muted/50"
-                  >
+                {visible.map(({ transaction, key }, index) => (
+                  <tr key={key} className="transition-colors hover:bg-muted/50">
                     {/*
                       Charges are numbered too, but marked with a dot so the eye
                       can pick out what M-PESA took without reading the Type
