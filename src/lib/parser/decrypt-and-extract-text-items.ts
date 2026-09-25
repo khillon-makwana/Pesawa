@@ -21,13 +21,14 @@ export async function decryptAndExtractTextItems(
 ): Promise<PdfExtractionOutcome> {
     const isBrowser = typeof window !== 'undefined';
 
-    // pdf.js ships a modern and a legacy build. We use the legacy one in both
-    // environments: Safari does not support async iteration over ReadableStream,
-    // which the modern build's getTextContent relies on, and the modern build
-    // also fails to resolve its worker under Node. One import path, both work.
+    // pdf.js ships two builds, and each environment needs a different one.
+    // The browser gets the default build, whose worker is served from public/.
+    // Node gets the legacy build, because the default build resolves its worker
+    // relative to the importing module, which only works under a bundler.
+    // Both must come from the same variant as the worker file, or pdf.js
+    // reports a version mismatch.
       const pdfjs = isBrowser
     ? await import('pdfjs-dist')
-    // {@}ts-expect-error - the legacy build ships no type declarations
     : await import('pdfjs-dist/legacy/build/pdf.mjs');
 
     if (isBrowser) {
