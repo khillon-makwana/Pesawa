@@ -25,8 +25,8 @@ export const metadata: Metadata = {
 };
 
 /*
- * Chrome lives in the route group layouts, not here: (site) gets the header,
- * container and footer, while (auth) is full-bleed with neither.
+ * Chrome lives in the (site) layout rather than here, so that not-found.tsx and
+ * error.tsx — which sit above that group — can compose their own.
  */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
