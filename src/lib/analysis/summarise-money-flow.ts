@@ -24,15 +24,15 @@ export interface MoneyFlowSummary {
  * parser's types are precise; these are what someone reading a summary wants
  * to see.
  */
-const SPENDING_CATEGORIES: Record<string, { label: string; types: TransactionType[] }> = {
-  transfers: { label: 'Sent to people', types: ['send_money', 'pochi_payment'] },
-  bills: { label: 'Bills and paybills', types: ['paybill_payment'] },
-  merchants: { label: 'Shops and merchants', types: ['till_payment'] },
-  airtimeAndData: { label: 'Airtime and data', types: ['airtime', 'bundle_purchase'] },
-  savings: { label: 'Moved to savings', types: ['unit_trust_investment'] },
-  cashOut: { label: 'Withdrawn as cash', types: ['agent_withdrawal'] },
-  fees: { label: 'M-PESA charges', types: ['charge'] }
-};
+const SPENDING_CATEGORIES: { label: string; types: TransactionType[] }[] = [
+  { label: 'Sent to people', types: ['send_money', 'pochi_payment'] },
+  { label: 'Bills and paybills', types: ['paybill_payment'] },
+  { label: 'Shops and merchants', types: ['till_payment'] },
+  { label: 'Airtime and data', types: ['airtime', 'bundle_purchase'] },
+  { label: 'Moved to savings', types: ['unit_trust_investment'] },
+  { label: 'Withdrawn as cash', types: ['agent_withdrawal'] },
+  { label: 'M-PESA charges', types: ['charge'] }
+];
 
 /**
  * Money that arrives without being earned — it was already yours, or is owed
@@ -56,19 +56,18 @@ export function summariseMoneyFlow(transactions: Transaction[]): MoneyFlowSummar
     incoming.filter(transaction => !NON_REVENUE_INFLOWS.includes(transaction.type))
   );
 
-  const spendingByCategory = Object.values(SPENDING_CATEGORIES)
-    .map(({ label, types }) => {
-      const matching = outgoing.filter(transaction => types.includes(transaction.type));
-      const totalInCents = sumAmounts(matching);
+  const spendingByCategory = SPENDING_CATEGORIES.map(({ label, types }) => {
+    const matching = outgoing.filter(transaction => types.includes(transaction.type));
+    const totalInCents = sumAmounts(matching);
 
-      return {
-        label,
-        totalInCents,
-        transactionCount: matching.length,
-        shareOfTotalPercent:
-          totalOutInCents === 0 ? 0 : Math.round((totalInCents / totalOutInCents) * 1000) / 10
-      };
-    })
+    return {
+      label,
+      totalInCents,
+      transactionCount: matching.length,
+      shareOfTotalPercent:
+        totalOutInCents === 0 ? 0 : Math.round((totalInCents / totalOutInCents) * 1000) / 10
+    };
+  })
     .filter(category => category.transactionCount > 0)
     .sort((a, b) => b.totalInCents - a.totalInCents);
 
