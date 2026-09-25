@@ -100,4 +100,85 @@ describe('rankCounterparties', () => {
   it('handles an empty statement', () => {
     expect(rankCounterparties([])).toEqual([]);
   });
+
+  describe('when two parties normalise to the same name', () => {
+    it('keeps them apart by phone number', () => {
+      const rankings = rankCounterparties([
+        buildTransaction({
+          counterpartyName: 'JOHN KAMAU',
+          counterpartyPhone: '254712345678',
+          amount: 50000
+        }),
+        buildTransaction({
+          counterpartyName: 'JOHN KAMAU',
+          counterpartyPhone: '254799999999',
+          amount: 20000
+        })
+      ]);
+
+      expect(rankings).toHaveLength(2);
+      expect(rankings.map(party => party.phone).sort()).toEqual([
+        '254712345678',
+        '254799999999'
+      ]);
+      expect(new Set(rankings.map(party => party.key)).size).toBe(2);
+    });
+
+    it('still groups repeat transactions with the same person', () => {
+      const rankings = rankCounterparties([
+        buildTransaction({
+          counterpartyName: 'JOHN KAMAU',
+          counterpartyPhone: '254712345678',
+          amount: 50000
+        }),
+        buildTransaction({
+          counterpartyName: 'JOHN KAMAU',
+          counterpartyPhone: '254712345678',
+          amount: 10000
+        }),
+        buildTransaction({
+          counterpartyName: 'JOHN KAMAU',
+          counterpartyPhone: '254799999999',
+          amount: 20000
+        })
+      ]);
+
+      expect(rankings).toHaveLength(2);
+      expect(rankings[0].transactionCount).toBe(2);
+      expect(rankings[0].totalPaidInCents).toBe(60000);
+    });
+  });
+
+  describe('when a name is not ambiguous', () => {
+    it('groups rows with and without a phone number together', () => {
+      // The same person: some rows carry the number, some do not. Splitting
+      // these would be worse than the problem the phone tiebreaker solves.
+      const rankings = rankCounterparties([
+        buildTransaction({
+          counterpartyName: 'NAIVAS SUPERMARKET',
+          counterpartyPhone: null,
+          amount: 50000
+        }),
+        buildTransaction({
+          counterpartyName: 'NAIVAS SUPERMARKET',
+          counterpartyPhone: '254712345678',
+          amount: 10000
+        })
+      ]);
+
+      expect(rankings).toHaveLength(1);
+      expect(rankings[0].transactionCount).toBe(2);
+      expect(rankings[0].phone).toBe('254712345678');
+    });
+
+    it('still groups names that differ only by punctuation or case', () => {
+      const rankings = rankCounterparties([
+        buildTransaction({ counterpartyName: "SAM NG'ONG'A", amount: 50000 }),
+        buildTransaction({ counterpartyName: 'Sam Ngonga', amount: 10000 })
+      ]);
+
+      expect(rankings).toHaveLength(1);
+      expect(rankings[0].transactionCount).toBe(2);
+    });
+  });
 });

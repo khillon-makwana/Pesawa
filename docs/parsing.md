@@ -55,7 +55,7 @@ Confirmed against a real statement. Matched with high confidence.
 | `paybill_payment` | `Pay Bill Online to {shortcode} - {NAME} Acc. {account}` |
 | `till_payment` | `Merchant Payment to {till} - {MERCHANT}` |
 | `pochi_payment` | `Customer Payment to Small Business to - {phone} {NAME}` |
-| `unit_trust_investment` | `Unit Trust Invest To {shortcode} - {FUND} by M-PESA\UnitTrust` |
+| `unit_trust_investment` | `Unit Trust Invest To {shortcode} - {FUND} by M-PESA\UnitTrust` (marker stripped) |
 | `bundle_purchase` | `Customer Bundle Purchase to {shortcode}{PRODUCT} by - {phone} {NAME}` |
 | `airtime` | `Airtime Purchase` |
 | `charge` | `Customer Transfer of Funds Charge` |
@@ -158,14 +158,22 @@ is available — see *Charges whose parent is in an earlier statement* above. A
 charge is still reported as unlinked when the caller passes no callback, or
 when the previous month's statement was never saved.
 
-**Unit trust counterparty.** The `by M-PESA\UnitTrust` suffix is included in the
-extracted fund name. Stripping it would need a rule invented from a single
-example.
-
 **Inconsistent source data.** Statements can be internally inconsistent. The
 parser reports this and marks the statement unverified rather than guessing.
 
-**Counterparty matching is heuristic.** Names are normalised by lowercasing and stripping punctuation, so SAM NG'ONG'A and SAM NGONGA group together. Two different people with the same name would also group. Adequate for a personal statement; a business tool would need the phone number as a tiebreaker.
+**Counterparty matching is heuristic.** Names are normalised by lowercasing and
+stripping punctuation, so SAM NG'ONG'A and SAM NGONGA group together.
+
+Two people with the same name are now separated by phone number, but only when
+that name was seen with more than one number. Adding the phone to every key
+would split a single party in two, because the same person appears both with
+and without a number depending on the row. Two remaining gaps: two people who
+share a name *and* have no number on any row still group together, and one
+person using two numbers now ranks as two parties.
+
+**Unit trust fund names.** The trailing `by M-PESA\UnitTrust` marker is
+stripped, leaving just the fund. The marker names the M-PESA product rather
+than anything about the fund, and is identical on every such row.
 
 ## Environment notes
 

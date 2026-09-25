@@ -1,7 +1,25 @@
 import type { Transaction } from '@/lib/parser/types';
-import { rankCounterparties } from '@/lib/analysis/rank-counterparties';
+import {
+  rankCounterparties,
+  type CounterpartyRanking
+} from '@/lib/analysis/rank-counterparties';
 import { formatAmount } from './format';
 import { Panel } from './panel';
+
+/** Display names that appear on more than one row of the ranking. */
+function findNamesUsedMoreThanOnce(rankings: CounterpartyRanking[]): Set<string> {
+  const seen = new Set<string>();
+  const repeated = new Set<string>();
+
+  for (const party of rankings) {
+    if (seen.has(party.displayName)) {
+      repeated.add(party.displayName);
+    }
+    seen.add(party.displayName);
+  }
+
+  return repeated;
+}
 
 export function CounterpartiesPanel({ transactions }: { transactions: Transaction[] }) {
   const rankings = rankCounterparties(transactions).slice(0, 10);
@@ -9,6 +27,8 @@ export function CounterpartiesPanel({ transactions }: { transactions: Transactio
   if (rankings.length === 0) {
     return null;
   }
+
+  const sharedNames = findNamesUsedMoreThanOnce(rankings);
 
   return (
     <Panel
@@ -34,9 +54,19 @@ export function CounterpartiesPanel({ transactions }: { transactions: Transactio
         </thead>
         <tbody className="divide-y divide-border">
           {rankings.map(party => (
-            <tr key={party.displayName}>
+            <tr key={party.key}>
               <td className="max-w-[1px] truncate py-2.5 pr-3 text-sm">
                 {party.displayName}
+                {/*
+                  Two people can share a name, in which case they are ranked
+                  separately and the number is the only thing telling the rows
+                  apart. It is shown only then, to keep the common case clean.
+                */}
+                {sharedNames.has(party.displayName) && party.phone !== null && (
+                  <span className="tabular ml-2 text-xs text-muted-foreground">
+                    {party.phone}
+                  </span>
+                )}
               </td>
 
               <td className="py-2.5 text-center">

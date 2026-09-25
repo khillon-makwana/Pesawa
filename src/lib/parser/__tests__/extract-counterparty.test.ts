@@ -64,13 +64,40 @@ describe('extractCounterparty', () => {
     )).toEqual({ name: 'JAMES KIPTOO', phone: '254700***102', confidence: 'high' });
   });
 
-  it('extracts the fund from a unit trust investment', () => {
+  it('extracts the fund from a unit trust investment, without the product marker', () => {
     const result = extractCounterparty(
       'Unit Trust Invest To 4145555 - ZIIDI MMF by M-PESA\\UnitTrust',
       'unit_trust_investment'
     );
-    expect(result.name).toBe('ZIIDI MMF by M-PESA\\UnitTrust');
+    expect(result.name).toBe('ZIIDI MMF');
     expect(result.phone).toBeNull();
+  });
+
+  it('strips the product marker whatever the fund is called', () => {
+    expect(
+      extractCounterparty(
+        'Unit Trust Invest To 4145556 - MALI MONEY MARKET FUND by M-PESA\\UnitTrust',
+        'unit_trust_investment'
+      ).name
+    ).toBe('MALI MONEY MARKET FUND');
+  });
+
+  it('leaves a fund name alone when the marker is absent', () => {
+    expect(
+      extractCounterparty(
+        'Unit Trust Invest To 4145555 - ZIIDI MMF',
+        'unit_trust_investment'
+      ).name
+    ).toBe('ZIIDI MMF');
+  });
+
+  it('does not strip a fund whose own name merely contains "by"', () => {
+    expect(
+      extractCounterparty(
+        'Unit Trust Invest To 4145557 - STANBIC FUND by M-PESA\\UnitTrust',
+        'unit_trust_investment'
+      ).name
+    ).toBe('STANBIC FUND');
   });
 
   it('splits the bundle shortcode from the product, with low confidence', () => {

@@ -64,6 +64,29 @@ function extractFromMerchantPayment(details: string): ExtractedCounterparty {
   return { name: normaliseWhitespace(match[1]), phone: null, confidence: 'high' };
 }
 
+/*
+ * Every unit trust row ends with the same marker naming the M-PESA product
+ * used, not anything about the fund:
+ *   "Unit Trust Invest To 4145555 - ZIIDI MMF by M-PESA\UnitTrust"
+ * The fund is "ZIIDI MMF", so the marker is dropped.
+ */
+const UNIT_TRUST_PRODUCT_SUFFIX = /\s*by\s+M-PESA\\UnitTrust\s*$/i;
+
+/** Reads the fund name the same way a paybill reads a biller, less the marker. */
+function extractFromUnitTrust(details: string): ExtractedCounterparty {
+  const extracted = extractFromPayBill(details);
+
+  if (extracted.name === null) {
+    return extracted;
+  }
+
+  const fundName = normaliseWhitespace(
+    extracted.name.replace(UNIT_TRUST_PRODUCT_SUFFIX, '')
+  );
+
+  return { ...extracted, name: fundName === '' ? null : fundName };
+}
+
 /**
  * Bundle purchase — the awkward one. There is NO separator between the
  * shortcode and the product name:
@@ -117,7 +140,7 @@ export function extractCounterparty(
       return extractFromPersonTransfer(normalised);   // "to - 254700***101 JAMES KIPTOO"
 
     case 'unit_trust_investment':
-      return extractFromPayBill(normalised);          // "To 4145555 - ZIIDI MMF by ..."
+      return extractFromUnitTrust(normalised);        // "To 4145555 - ZIIDI MMF by ..."
 
     case 'charge':
     case 'airtime':
