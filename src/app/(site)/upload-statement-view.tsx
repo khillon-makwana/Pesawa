@@ -10,8 +10,10 @@ import { loadParentReceiptNumbers, saveStatement } from '@/lib/storage/saved-sta
 import { getStorageMode } from '@/lib/storage/statement-database';
 import { StatementReport } from '@/components/statement/statement-report';
 import { ReceiptPreview } from '@/components/marketing/receipt-preview';
+import { StatisticsBand } from '@/components/marketing/statistics-band';
 import { SiteContainer } from '@/components/site-container';
 import { SessionOnlyNotice } from '@/components/storage-notice';
+import { DocumentGlyph, PlayGlyph, WarningGlyph, DownloadGlyph } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 
@@ -274,57 +276,6 @@ export function UploadStatementView() {
 }
 
 /*
- * Three things worth knowing before uploading anything. Every figure here is
- * either from the shipped sample statement and labelled as such, or a plain
- * description of what the parser does — nothing is a claim about averages
- * across real users, because there is no such data.
- */
-function StatisticsBand() {
-  const items = [
-    {
-      label: 'In the sample statement',
-      figure: 'KSh 459',
-      detail:
-        'charged across its 90 transactions — the number almost nobody adds up for themselves.'
-    },
-    {
-      label: 'Balance check',
-      figure: 'Line by line',
-      detail:
-        'Every running balance is checked against the one before it, so a missing or reversed entry is reported instead of passing quietly.'
-    },
-    {
-      label: 'Where it runs',
-      figure: 'Your browser',
-      detail:
-        'The PDF and its password stay on this device. Nothing is sent to a server, and anything you save stays in this browser.'
-    }
-  ];
-
-  return (
-    <section className="mt-8 bg-surface-dark py-14 text-primary-foreground">
-      <SiteContainer className="grid gap-10 sm:grid-cols-3 sm:gap-8">
-        {items.map((item, index) => (
-          <div
-            key={item.label}
-            className={index > 0 ? 'sm:border-l sm:border-white/10 sm:pl-8' : undefined}
-          >
-            <p className="eyebrow flex items-center gap-2 text-primary-foreground/50">
-              <span aria-hidden className="text-accent-bright">
-                ■
-              </span>
-              {item.label}
-            </p>
-            <p className="tabular mt-3 text-3xl font-semibold lg:text-4xl">{item.figure}</p>
-            <p className="mt-3 text-sm text-primary-foreground/70">{item.detail}</p>
-          </div>
-        ))}
-      </SiteContainer>
-    </section>
-  );
-}
-
-/*
  * Saving is deliberately opt-in. Parsing a statement shows you the report; it
  * does not put anything in storage until you ask for it here.
  */
@@ -423,66 +374,3 @@ function StatementSummary({ result, fileName }: { result: ParseResult; fileName:
   );
 }
 
-function DocumentGlyph() {
-  return (
-    <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-primary">
-      <svg
-        aria-hidden
-        viewBox="0 0 24 24"
-        className="size-5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1.8}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
-        <path d="M14 3v5h5M9 13h6M9 17h4" />
-      </svg>
-    </span>
-  );
-}
-
-function PlayGlyph() {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="m10 8.5 6 3.5-6 3.5z" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-
-function WarningGlyph() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 4 2.5 20h19z" />
-      <path d="M12 10v4M12 17.5v.01" />
-    </svg>
-  );
-}
-
-function DownloadGlyph() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 24 24"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16" />
-    </svg>
-  );
-}
