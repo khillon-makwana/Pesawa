@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import type { Transaction } from '@/lib/parser/types';
 import type { SavedStatement } from '@/lib/storage/types';
 import {
@@ -14,6 +13,11 @@ import { getStorageMode } from '@/lib/storage/statement-database';
 import { buildBackupFile, parseBackupFile, importBackup } from '@/lib/storage/backup-file';
 import { downloadJson } from '@/lib/export/download-json';
 import { StatementReport } from '@/components/statement/statement-report';
+import { buildCombinedMeta } from '@/components/statement/combined-meta';
+import {
+  SavedStatementList,
+  SavedStatementsEmptyState
+} from './saved-statement-list';
 import {
   DateRangeFilter,
   filterByDateRange,
@@ -51,7 +55,6 @@ export function SavedStatementsView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSessionOnly, setIsSessionOnly] = useState(false);
   const [range, setRange] = useState<DateRange>(WHOLE_RANGE);
-  const [confirmingDeleteAll, setConfirmingDeleteAll] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
@@ -88,7 +91,6 @@ export function SavedStatementsView() {
 
   async function handleDeleteAll() {
     await deleteAllSavedData();
-    setConfirmingDeleteAll(false);
     await reload();
   }
 
@@ -189,54 +191,14 @@ export function SavedStatementsView() {
         )}
 
         {statements.length === 0 ? (
-          <EmptyState />
+          <SavedStatementsEmptyState />
         ) : (
           <>
-            <section className="mt-8">
-              <h2 className="eyebrow text-muted-foreground">
-                {statements.length} statement{statements.length === 1 ? '' : 's'}
-              </h2>
-
-              <ul className="mt-3 space-y-2">
-                {statements.map(statement => (
-                  <StatementRow
-                    key={statement.id}
-                    statement={statement}
-                    onDelete={() => void handleDeleteStatement(statement.id)}
-                  />
-                ))}
-              </ul>
-
-              <div className="mt-6 rounded-lg border border-destructive/30 p-4">
-                {confirmingDeleteAll ? (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="flex-1 text-sm">
-                      Delete every saved statement and transaction from this browser? This
-                      cannot be undone.
-                    </p>
-                    <Button variant="outline" size="sm" onClick={() => setConfirmingDeleteAll(false)}>
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={() => void handleDeleteAll()}>
-                      Yes, delete everything
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="flex-1 text-sm text-muted-foreground">
-                      Everything here is stored only in this browser.
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setConfirmingDeleteAll(true)}
-                    >
-                      Delete all my data
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </section>
+            <SavedStatementList
+              statements={statements}
+              onDeleteStatement={statementId => void handleDeleteStatement(statementId)}
+              onDeleteAll={() => void handleDeleteAll()}
+            />
 
             <section className="mt-10">
               <DateRangeFilter
@@ -263,73 +225,4 @@ export function SavedStatementsView() {
       </SiteContainer>
     </main>
   );
-}
-
-function StatementRow({
-  statement,
-  onDelete
-}: {
-  statement: SavedStatement;
-  onDelete: () => void;
-}) {
-  return (
-    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-4">
-      <div className="min-w-0">
-        <p className="truncate font-medium">{statement.fileName}</p>
-        <p className="tabular mt-1 font-mono text-xs text-muted-foreground">
-          {formatDate(statement.periodStart)} – {formatDate(statement.periodEnd)} ·{' '}
-          {statement.transactionCount} transactions · saved{' '}
-          {formatDate(statement.savedAt)}
-        </p>
-      </div>
-
-      <Button variant="outline" size="sm" onClick={onDelete}>
-        Delete
-      </Button>
-    </li>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="mt-8 rounded-lg border border-dashed border-border p-8 text-center">
-      <p className="text-muted-foreground">
-        Nothing saved on this device yet. Open a statement and choose{' '}
-        <strong className="font-medium text-foreground">Save on this device</strong> to
-        keep it here.
-      </p>
-      <Link href="/" className={`${buttonVariants()} mt-5`}>
-        Open a statement
-      </Link>
-    </div>
-  );
-}
-
-/**
- * Describes the filtered set as if it were one statement.
- *
- * The opening balance is the first row's balance with its own effect undone,
- * the same reasoning the parser uses for a single file. `balanceVerified` means
- * every saved statement verified on its own — the walk is not re-run across
- * files, because statements can have gaps between them.
- */
-function buildCombinedMeta(transactions: Transaction[], statements: SavedStatement[]) {
-  const first = transactions[0];
-  const last = transactions[transactions.length - 1];
-  const firstEffect = first.direction === 'in' ? first.amount : -first.amount;
-
-  return {
-    periodStart: first.completedAt,
-    periodEnd: last.completedAt,
-    openingBalance: first.balanceAfter - firstEffect,
-    closingBalance: last.balanceAfter,
-    balanceVerified: statements.every(statement => statement.balanceVerified)
-  };
-}
-
-function formatDate(isoTimestamp: string): string {
-  if (isoTimestamp === '') {
-    return 'unknown';
-  }
-  return isoTimestamp.slice(0, 10);
 }
