@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export function DeleteStatementButton({ statementId }: { statementId: string }) {
   const router = useRouter();
@@ -19,21 +20,23 @@ export function DeleteStatementButton({ statementId }: { statementId: string }) 
 
   if (!isConfirming) {
     return (
-      <button onClick={() => setIsConfirming(true)} style={{ color: '#b00' }}>
+      <Button variant="destructive" size="sm" onClick={() => setIsConfirming(true)}>
         Delete this statement
-      </button>
+      </Button>
     );
   }
 
   return (
-    <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-      <span style={{ fontSize: 14 }}>
-        Delete this statement and its {' '}transactions?
+    <span className="flex flex-wrap items-center gap-2">
+      <span className="text-sm text-muted-foreground">
+        Delete this statement and its transactions?
       </span>
-      <button onClick={handleDelete} disabled={isDeleting} style={{ color: '#b00' }}>
+      <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isDeleting}>
         {isDeleting ? 'Deleting…' : 'Yes, delete'}
-      </button>
-      <button onClick={() => setIsConfirming(false)}>Cancel</button>
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => setIsConfirming(false)}>
+        Cancel
+      </Button>
     </span>
   );
 }

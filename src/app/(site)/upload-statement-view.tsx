@@ -1,0 +1,505 @@
+'use client';
+
+import { useState } from 'react';
+import type { ParseResult } from '@/lib/parser/types';
+import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
+import { downloadCsv } from '@/lib/export/download-csv';
+import { StatementReport } from '@/components/statement/statement-report';
+import { ReceiptPreview } from '@/components/marketing/receipt-preview';
+import { SiteContainer } from '@/components/site-container';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input, Label } from '@/components/ui/input';
+
+type ScreenState =
+  | { name: 'idle' }
+  | { name: 'needs_password'; file: File; hadWrongPassword: boolean }
+  | { name: 'parsing' }
+  | { name: 'done'; result: ParseResult; fileName: string }
+  | { name: 'failed'; message: string };
+
+export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
+  const [screen, setScreen] = useState<ScreenState>({ name: 'idle' });
+  const [password, setPassword] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
+  async function parse(file: File, submittedPassword?: string) {
+    setScreen({ name: 'parsing' });
+
+    const outcome = await parseStatementPdf(await file.arrayBuffer(), submittedPassword);
+
+    if (outcome.ok) {
+      setPassword('');
+      setScreen({ name: 'done', result: outcome.result, fileName: file.name });
+      return;
+    }
+
+    if (outcome.reason === 'password_required' || outcome.reason === 'wrong_password') {
+      setScreen({
+        name: 'needs_password',
+        file,
+        hadWrongPassword: outcome.reason === 'wrong_password'
+      });
+      return;
+    }
+
+    setScreen({ name: 'failed', message: outcome.detail });
+  }
+
+  async function loadSample(withDefect: boolean) {
+    setScreen({ name: 'parsing' });
+
+    const path = withDefect
+      ? '/samples/sample-statement-with-defect.pdf'
+      : '/samples/sample-statement.pdf';
+
+    try {
+      const response = await fetch(path);
+      const bytes = await response.arrayBuffer();
+      const outcome = await parseStatementPdf(bytes, '123456');
+
+      if (outcome.ok) {
+        setScreen({
+          name: 'done',
+          result: outcome.result,
+          fileName: withDefect ? 'sample-statement-with-defect.pdf' : 'sample-statement.pdf'
+        });
+        return;
+      }
+
+      setScreen({ name: 'failed', message: outcome.detail });
+    } catch {
+      setScreen({ name: 'failed', message: 'Could not load the sample statement' });
+    }
+  }
+
+  function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFileName(file.name);
+      void parse(file);
+    }
+  }
+
+  if (screen.name === 'idle') {
+    return (
+      <main>
+        <SiteContainer className="grid items-start gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16 lg:py-20">
+          <div>
+            <p className="eyebrow flex items-center gap-2 text-muted-foreground">
+              <span aria-hidden>—</span> M-PESA statement parser
+            </p>
+
+            <h1 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+              See what M-PESA actually costs you
+            </h1>
+
+            <p className="mt-5 max-w-lg text-lg text-muted-foreground">
+              Open your statement and get a breakdown of where your money went, what you
+              paid in charges, and who you transact with most.
+            </p>
+
+            <div className="mt-10 rounded-xl border border-dashed border-primary/30 bg-card/60 p-6">
+              <DocumentGlyph />
+
+              <Label htmlFor="statement-file" className="mt-4 text-lg font-semibold">
+                Drop your M-PESA statement PDF
+              </Label>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {/* A label rather than a button, so it drives the real file input. */}
+                <label htmlFor="statement-file" className={buttonVariants()}>
+                  Choose file
+                </label>
+                <span className="font-mono text-sm text-muted-foreground">
+                  {selectedFileName ?? 'No file chosen'}
+                </span>
+              </div>
+
+              <input
+                id="statement-file"
+                type="file"
+                accept="application/pdf"
+                onChange={handleFileSelected}
+                className="sr-only"
+              />
+
+              <p className="mt-6 flex items-start gap-2 border-t border-border pt-4 text-sm text-muted-foreground">
+                <span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[var(--color-money-in)]" />
+                <span>
+                  Read in your browser. The file and its password never leave this device.{' '}
+                  <Link href="/privacy" className="underline underline-offset-4">
+                    How this works
+                  </Link>
+                </span>
+              </p>
+            </div>
+
+            <div className="mt-10">
+              <h2 className="eyebrow text-muted-foreground">Sample statements</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                No statement to hand? Both of these contain entirely fictional data.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Button variant="outline" onClick={() => void loadSample(false)}>
+                  <PlayGlyph /> Try a sample statement
+                </Button>
+                <Button variant="outline" onClick={() => void loadSample(true)}>
+                  <WarningGlyph /> Try one with a missing transaction
+                </Button>
+              </div>
+
+              <p className="mt-4 max-w-xl text-sm text-muted-foreground">
+                The second sample has a transaction removed from it. The balance check
+                detects the gap and reports the exact amount that is unaccounted for — the
+                same thing happened on a real statement from Safaricom.
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden lg:block lg:pt-10">
+            <ReceiptPreview />
+          </div>
+        </SiteContainer>
+
+        <StatisticsBand />
+      </main>
+    );
+  }
+
+  return (
+    <main>
+      <SiteContainer>
+        {screen.name === 'needs_password' && (
+          <div className="mx-auto max-w-md py-16">
+            <p className="chip bg-muted text-muted-foreground">Protected document</p>
+            <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight">
+              This statement is protected
+            </h1>
+
+            <div className="mt-6 rounded-lg border border-border bg-card p-6">
+              <Label htmlFor="statement-password">Statement code</Label>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                The code Safaricom sent with the statement.{' '}
+                <strong className="font-medium text-foreground">
+                  This is not your M-PESA PIN.
+                </strong>{' '}
+                Never enter your PIN here or anywhere else.
+              </p>
+
+              <div className="mt-4 flex gap-2">
+                <Input
+                  id="statement-password"
+                  type="password"
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' && screen.name === 'needs_password') {
+                      void parse(screen.file, password);
+                    }
+                  }}
+                  autoFocus
+                  className="min-w-0 flex-1"
+                />
+                <Button onClick={() => void parse(screen.file, password)} size="lg">
+                  Open
+                </Button>
+              </div>
+
+              {screen.hadWrongPassword && (
+                <p className="mt-3 text-sm text-destructive" role="alert">
+                  That code did not work. Try again.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {screen.name === 'parsing' && (
+          <div className="py-24 text-center">
+            <p className="eyebrow text-muted-foreground">Working locally</p>
+            <p className="mt-3 font-mono text-lg">
+              Reading statement
+              <span className="animate-pulse">▌</span>
+            </p>
+          </div>
+        )}
+
+        {screen.name === 'failed' && (
+          <div className="mx-auto max-w-md py-16">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-6">
+              <p className="eyebrow text-destructive">Could not read this file</p>
+              <p className="mt-2 text-sm" role="alert">
+                {screen.message}
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSelectedFileName(null);
+                  setScreen({ name: 'idle' });
+                }}
+                className="mt-5"
+              >
+                Start over
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {screen.name === 'done' && (
+          <StatementSummary
+            result={screen.result}
+            fileName={screen.fileName}
+            isSignedIn={isSignedIn}
+          />
+        )}
+      </SiteContainer>
+    </main>
+  );
+}
+
+/*
+ * Three things worth knowing before uploading anything. Every figure here is
+ * either from the shipped sample statement and labelled as such, or a plain
+ * description of what the parser does — nothing is a claim about averages
+ * across real users, because there is no such data.
+ */
+function StatisticsBand() {
+  const items = [
+    {
+      label: 'In the sample statement',
+      figure: 'KSh 459',
+      detail:
+        'charged across its 90 transactions — the number almost nobody adds up for themselves.'
+    },
+    {
+      label: 'Balance check',
+      figure: 'Line by line',
+      detail:
+        'Every running balance is checked against the one before it, so a missing or reversed entry is reported instead of passing quietly.'
+    },
+    {
+      label: 'Where it runs',
+      figure: 'Your browser',
+      detail:
+        'The PDF and its password stay on this device. Nothing is stored unless you sign in and choose to save.'
+    }
+  ];
+
+  return (
+    <section className="mt-8 bg-surface-dark py-14 text-primary-foreground">
+      <SiteContainer className="grid gap-10 sm:grid-cols-3 sm:gap-8">
+        {items.map((item, index) => (
+          <div
+            key={item.label}
+            className={index > 0 ? 'sm:border-l sm:border-white/10 sm:pl-8' : undefined}
+          >
+            <p className="eyebrow flex items-center gap-2 text-primary-foreground/50">
+              <span aria-hidden className="text-accent-bright">
+                ■
+              </span>
+              {item.label}
+            </p>
+            <p className="tabular mt-3 text-3xl font-semibold lg:text-4xl">{item.figure}</p>
+            <p className="mt-3 text-sm text-primary-foreground/70">{item.detail}</p>
+          </div>
+        ))}
+      </SiteContainer>
+    </section>
+  );
+}
+
+function StatementSummary({
+  result,
+  fileName,
+  isSignedIn
+}: {
+  result: ParseResult;
+  fileName: string;
+  isSignedIn: boolean;
+}) {
+  const router = useRouter();
+  const { meta, transactions, issues } = result;
+
+  const [saveState, setSaveState] = useState<
+    | { name: 'idle' }
+    | { name: 'saving' }
+    | { name: 'saved'; imported: number; duplicates: number }
+    | { name: 'failed'; message: string }
+  >({ name: 'idle' });
+
+  async function handleSave() {
+    setSaveState({ name: 'saving' });
+
+    try {
+      const response = await fetch('/api/statements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName,
+          meta: {
+            periodStart: meta.periodStart,
+            periodEnd: meta.periodEnd,
+            openingBalance: meta.openingBalance,
+            closingBalance: meta.closingBalance,
+            balanceVerified: meta.balanceVerified,
+            parserVersion: meta.parserVersion
+          },
+          transactions,
+          issues
+        })
+      });
+
+      const body = await response.json();
+
+      if (!response.ok) {
+        setSaveState({ name: 'failed', message: body.error ?? 'Could not save' });
+        return;
+      }
+
+      setSaveState({
+        name: 'saved',
+        imported: body.importedCount,
+        duplicates: body.duplicateCount
+      });
+      router.refresh();
+    } catch {
+      setSaveState({ name: 'failed', message: 'Could not reach the server' });
+    }
+  }
+
+  function handleExport(what: 'transactions' | 'issues') {
+    const baseName = fileName.replace(/\.pdf$/i, '');
+
+    if (what === 'transactions') {
+      downloadCsv(`${baseName}-transactions.csv`, buildTransactionsCsv(transactions));
+    } else {
+      downloadCsv(`${baseName}-issues.csv`, buildIssuesCsv(issues));
+    }
+  }
+
+  return (
+    <StatementReport
+      meta={meta}
+      transactions={transactions}
+      issues={issues}
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={() => handleExport('transactions')}>
+            <DownloadGlyph /> Download CSV
+          </Button>
+
+          {issues.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => handleExport('issues')}>
+              Download issues
+            </Button>
+          )}
+
+          {isSignedIn && saveState.name === 'idle' && (
+            <Button size="sm" onClick={handleSave}>
+              Save this statement
+            </Button>
+          )}
+
+          {!isSignedIn && (
+            <p className="text-sm text-muted-foreground">
+              <Link href="/login" className="underline underline-offset-4">
+                Sign in
+              </Link>{' '}
+              to save this statement
+            </p>
+          )}
+
+          {saveState.name === 'saving' && (
+            <p className="text-sm text-muted-foreground">Saving…</p>
+          )}
+
+          {saveState.name === 'saved' && (
+            <p className="text-sm text-[var(--color-money-in)]">
+              Saved {saveState.imported} transactions
+              {saveState.duplicates > 0 &&
+                `, skipped ${saveState.duplicates} already imported`}
+              .{' '}
+              <Link href="/statements" className="underline underline-offset-4">
+                View your ledger
+              </Link>
+            </p>
+          )}
+
+          {saveState.name === 'failed' && (
+            <p className="text-sm text-destructive" role="alert">
+              {saveState.message}
+            </p>
+          )}
+        </>
+      }
+    />
+  );
+}
+
+function DocumentGlyph() {
+  return (
+    <span className="flex size-11 items-center justify-center rounded-md bg-secondary text-primary">
+      <svg
+        aria-hidden
+        viewBox="0 0 24 24"
+        className="size-5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+        <path d="M14 3v5h5M9 13h6M9 17h4" />
+      </svg>
+    </span>
+  );
+}
+
+function PlayGlyph() {
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m10 8.5 6 3.5-6 3.5z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function WarningGlyph() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 4 2.5 20h19z" />
+      <path d="M12 10v4M12 17.5v.01" />
+    </svg>
+  );
+}
+
+function DownloadGlyph() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 24 24"
+      className="size-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16" />
+    </svg>
+  );
+}

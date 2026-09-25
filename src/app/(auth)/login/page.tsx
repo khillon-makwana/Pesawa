@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { INPUT, LABEL, PRIMARY_BUTTON } from '@/components/ui/form-styles';
+import { Button } from '@/components/ui/button';
+import { Input, Label } from '@/components/ui/input';
+import { AuthSplitLayout } from '@/components/auth/auth-split-layout';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,32 +41,42 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-sm">
-      <h1 className="text-2xl font-semibold">Sign in</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+    <AuthSplitLayout
+      tagline="You only need an account to save statements."
+      notes={[
+        {
+          label: 'Client-side parsing',
+          detail: 'Statements are read in your browser. Nothing is uploaded.'
+        },
+        {
+          label: 'Zero trackers',
+          detail: 'No cookies beyond your session, no analytics, no ad tags.'
+        }
+      ]}
+    >
+      <p className="chip bg-muted text-muted-foreground">Saved statements</p>
+      <h1 className="mt-3 font-heading text-4xl font-bold tracking-tight">Sign in</h1>
+      <p className="mt-2 text-muted-foreground">
         You only need an account to save statements.
       </p>
 
-      <div className="mt-6 space-y-4 rounded-lg border bg-card p-6">
+      <div className="mt-8 space-y-5">
         <div>
-          <label htmlFor="email" className={LABEL}>
-            Email
-          </label>
-          <input
+          <Label htmlFor="email">Email</Label>
+          <Input
             id="email"
             type="email"
             value={email}
             onChange={event => setEmail(event.target.value)}
             autoComplete="email"
-            className={INPUT}
+            placeholder="you@example.com"
+            className="mt-2"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className={LABEL}>
-            Password
-          </label>
-          <input
+          <Label htmlFor="password">Password</Label>
+          <Input
             id="password"
             type="password"
             value={password}
@@ -73,7 +85,7 @@ export default function LoginPage() {
               if (event.key === 'Enter') void handleSubmit();
             }}
             autoComplete="current-password"
-            className={INPUT}
+            className="mt-2"
           />
         </div>
 
@@ -83,21 +95,26 @@ export default function LoginPage() {
           </p>
         )}
 
-        <button
+        <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className={`w-full ${PRIMARY_BUTTON}`}
+          size="lg"
+          className="w-full"
         >
           {isSubmitting ? 'Signing in…' : 'Sign in'}
-        </button>
+        </Button>
       </div>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-8 rounded-md bg-muted/60 py-4 text-center text-sm text-muted-foreground">
         No account?{' '}
-        <Link href="/register" className="underline">
+        <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
           Create one
         </Link>
       </p>
-    </div>
+
+      <p className="eyebrow mt-8 text-center text-muted-foreground">
+        Client-side parsing · No cookies, no trackers
+      </p>
+    </AuthSplitLayout>
   );
 }

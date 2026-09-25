@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { getAuthenticatedUser } from '@/server/auth/require-authenticated-user';
-import { SiteHeader } from '@/components/site-header';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,25 +12,31 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Headings only. Wider and more geometric than Geist, which is what gives the
+// document its masthead feel.
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "Pesawa",
   description: "Read and reconcile your M-PESA statements",
 };
 
-export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const user = await getAuthenticatedUser();
-
+/*
+ * Chrome lives in the route group layouts, not here: (site) gets the header,
+ * container and footer, while (auth) is full-bleed with neither.
+ */
+export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background font-sans antialiased">
-        <SiteHeader userEmail={user?.email ?? null} />
-        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   );

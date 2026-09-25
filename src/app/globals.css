@@ -2,36 +2,59 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
+/*
+ * Pesawa reads as an archival ledger document: deep forest green on pale mint,
+ * a wide display face for headings, and uppercase monospace for every label,
+ * column header and figure. Monospace is doing real work here — statements are
+ * columns of money, and columns only line up with tabular figures.
+ */
 :root {
   /* Surfaces */
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+  --background: #EDF6EF;
+  --foreground: #12211A;
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #12211A;
 
-  /* Brand — blue, deliberately not Safaricom green */
-  --primary: #1E40AF;
-  --primary-foreground: #FFFFFF;
+  /* Brand — deep forest green. Dark enough to sit well away from Safaricom's
+     own green, which this project is not affiliated with. */
+  --primary: #0C3B2A;
+  --primary-foreground: #F2FAF3;
 
-  --secondary: #E9EEF6;
-  --secondary-foreground: #1E3A8A;
+  /* Two darker surfaces for the inverted panels: the statistics band and the
+     charges hero. Kept distinct so the hero reads as the deeper of the two. */
+  --surface-dark: #252F29;
+  --surface-deep: #14261D;
 
-  /* Amber, reserved for the single hero figure */
-  --accent: #D97706;
+  --secondary: #DCEBDF;
+  --secondary-foreground: #0C3B2A;
+
+  /* Charges. --accent clears 4.5:1 on both the page and a card (4.75 / 5.25);
+     --accent-bright is for large figures and anything on a dark surface. */
+  --accent: #AA5424;
+  --accent-bright: #E8834A;
   --accent-foreground: #FFFFFF;
 
-  /* Muted text — 4.5:1 on --background */
-  --muted: #E9EEF6;
-  --muted-foreground: #475569;
+  --muted: #E2EFE4;
+  --muted-foreground: #4B5D52;
 
-  --destructive: #DC2626;
+  --destructive: #B3452B;
   --destructive-foreground: #FFFFFF;
 
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #1E40AF;
+  --border: #D3E4D7;
+  --input: #D3E4D7;
+  --ring: #0C3B2A;
+
+  /*
+   * Spending categories, darkest first. Assigned by rank rather than by name,
+   * so the largest slice is always the heaviest colour. Charges are the one
+   * exception and keep --accent wherever they land.
+   */
+  --category-1: #0C3B2A;
+  --category-2: #1C7A4C;
+  --category-3: #3B9E6B;
+  --category-4: #6FBE92;
+  --category-5: #A5D8BB;
+  --category-6: #CDE9D8;
 
   --radius: 0.5rem;
 }
@@ -44,9 +67,12 @@
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-surface-dark: var(--surface-dark);
+  --color-surface-deep: var(--surface-deep);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -56,66 +82,25 @@
   --color-ring: var(--ring);
 
   /* Money in / money out. Always paired with a sign, never colour alone. */
-  --color-money-in: #047857;
-  --color-money-out: #0F172A;
+  --color-money-in: #1C7A4C;
+  --color-money-out: var(--foreground);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-space-grotesk);
 
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
     @apply font-sans;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
   }
 
   body {
@@ -130,6 +115,32 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-family: var(--font-mono);
+  }
+
+  /*
+   * The uppercase monospace label above almost every block. Small, widely
+   * tracked, and never the only thing carrying meaning.
+   */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* Geometry only for the small status pills — colour comes from utilities. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.1875rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   /* Respect the system setting rather than animating regardless. */

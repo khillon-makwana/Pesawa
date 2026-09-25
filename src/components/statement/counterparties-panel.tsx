@@ -1,6 +1,7 @@
 import type { Transaction } from '@/lib/parser/types';
 import { rankCounterparties } from '@/lib/analysis/rank-counterparties';
 import { formatAmount } from './format';
+import { Panel } from './panel';
 
 export function CounterpartiesPanel({ transactions }: { transactions: Transaction[] }) {
   const rankings = rankCounterparties(transactions).slice(0, 10);
@@ -10,33 +11,55 @@ export function CounterpartiesPanel({ transactions }: { transactions: Transactio
   }
 
   return (
-    <section className="rounded-lg border bg-card p-6">
-      <h3 className="text-lg font-semibold">Who you transact with most</h3>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Ranked by total value moved, in and out.
-      </p>
+    <Panel
+      title="Who you transact with most"
+      subtitle="Ranked by total value moved, in and out."
+    >
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="border-b border-border">
+            <th className="eyebrow pb-2 font-normal text-muted-foreground">
+              Entity / counterparty
+            </th>
+            <th className="eyebrow pb-2 text-center font-normal text-muted-foreground">
+              Vol
+            </th>
+            <th className="eyebrow pb-2 text-right font-normal text-muted-foreground">
+              Outflow
+            </th>
+            <th className="eyebrow hidden pb-2 text-right font-normal text-muted-foreground sm:table-cell">
+              Inflow
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rankings.map(party => (
+            <tr key={party.displayName}>
+              <td className="max-w-[1px] truncate py-2.5 pr-3 text-sm">
+                {party.displayName}
+              </td>
 
-      <ul className="mt-4 divide-y divide-border">
-        {rankings.map(party => (
-          <li key={party.displayName} className="flex items-center gap-3 py-2.5">
-            <span className="min-w-0 flex-1 truncate text-sm">{party.displayName}</span>
+              <td className="py-2.5 text-center">
+                <span className="tabular text-xs text-muted-foreground">
+                  {party.transactionCount}×
+                </span>
+              </td>
 
-            <span className="tabular w-8 shrink-0 text-right text-xs text-muted-foreground">
-              {party.transactionCount}×
-            </span>
+              <td className="tabular py-2.5 pl-3 text-right text-sm whitespace-nowrap">
+                {party.totalPaidInCents > 0
+                  ? `−${formatAmount(party.totalPaidInCents)}`
+                  : '—'}
+              </td>
 
-            <span className="tabular w-28 shrink-0 text-right text-sm">
-              {party.totalPaidInCents > 0 ? `−${formatAmount(party.totalPaidInCents)}` : ''}
-            </span>
-
-            <span className="tabular hidden w-28 shrink-0 text-right text-sm text-[var(--color-money-in)] sm:block">
-              {party.totalReceivedInCents > 0
-                ? `+${formatAmount(party.totalReceivedInCents)}`
-                : ''}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
+              <td className="tabular hidden py-2.5 pl-3 text-right text-sm whitespace-nowrap text-[var(--color-money-in)] sm:table-cell">
+                {party.totalReceivedInCents > 0
+                  ? `+${formatAmount(party.totalReceivedInCents)}`
+                  : '—'}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Panel>
   );
 }
