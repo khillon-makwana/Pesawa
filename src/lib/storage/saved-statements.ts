@@ -1,6 +1,6 @@
 import type { ParseResult, Transaction } from '@/lib/parser/types';
 import type { SavedStatement, StoredTransaction } from './types';
-import { keyTransactions, findNewTransactions } from './find-new-transactions';
+import { splitBySaved } from './find-new-transactions';
 import {
   readAllStatements,
   readAllTransactions,
@@ -69,8 +69,7 @@ export async function saveStatement(
   const existing = await readAllTransactions();
   const existingByKey = new Map(existing.map(row => [row.key, row]));
 
-  const keyedTransactions = keyTransactions(result.transactions);
-  const newTransactions = findNewTransactions(
+  const { newRows, alreadySaved } = splitBySaved(
     result.transactions,
     new Set(existingByKey.keys())
   );
@@ -89,7 +88,7 @@ export async function saveStatement(
     issues: result.issues
   };
 
-  const toWrite: StoredTransaction[] = newTransactions.map(({ transaction, key }) => ({
+  const toWrite: StoredTransaction[] = newRows.map(({ transaction, key }) => ({
     ...transaction,
     key,
     statementIds: [statementId]
@@ -99,13 +98,13 @@ export async function saveStatement(
 
   // Rows this statement shares with one already saved: record that this
   // statement contains them too.
-  for (const { key } of keyedTransactions) {
-    const alreadySaved = existingByKey.get(key);
+  for (const { key } of alreadySaved) {
+    const storedRow = existingByKey.get(key);
 
-    if (alreadySaved !== undefined && !alreadySaved.statementIds.includes(statementId)) {
+    if (storedRow !== undefined && !storedRow.statementIds.includes(statementId)) {
       await writeTransaction({
-        ...alreadySaved,
-        statementIds: [...alreadySaved.statementIds, statementId]
+        ...storedRow,
+        statementIds: [...storedRow.statementIds, statementId]
       });
     }
   }
@@ -113,7 +112,7 @@ export async function saveStatement(
   return {
     statementId,
     savedCount: toWrite.length,
-    duplicateCount: result.transactions.length - toWrite.length
+    duplicateCount: alreadySaved.length
   };
 }
 

@@ -40,15 +40,42 @@ export function keyTransactions(transactions: Transaction[]): KeyedTransaction[]
   });
 }
 
+export interface SplitBySaved {
+  /** Rows not in storage yet. */
+  newRows: KeyedTransaction[];
+  /** Rows an earlier statement already saved. */
+  alreadySaved: KeyedTransaction[];
+}
+
 /**
- * Returns the rows that are not already saved, each with its key.
+ * Sorts a statement's rows into those already saved and those not.
  *
  * Re-uploading a statement that overlaps one already saved is a normal thing to
- * do, so the rows they share are skipped rather than treated as an error.
+ * do, so the rows they share are reported rather than treated as an error — the
+ * caller records that this statement contains them too.
  */
+export function splitBySaved(
+  incoming: Transaction[],
+  existingKeys: Set<string>
+): SplitBySaved {
+  const newRows: KeyedTransaction[] = [];
+  const alreadySaved: KeyedTransaction[] = [];
+
+  for (const row of keyTransactions(incoming)) {
+    if (existingKeys.has(row.key)) {
+      alreadySaved.push(row);
+    } else {
+      newRows.push(row);
+    }
+  }
+
+  return { newRows, alreadySaved };
+}
+
+/** The rows that are not already saved. */
 export function findNewTransactions(
   incoming: Transaction[],
   existingKeys: Set<string>
 ): KeyedTransaction[] {
-  return keyTransactions(incoming).filter(row => !existingKeys.has(row.key));
+  return splitBySaved(incoming, existingKeys).newRows;
 }
