@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import type { ParseResult } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { buildTransactionsCsv, buildIssuesCsv } from '@/lib/export/build-transactions-csv';
 import { downloadCsv } from '@/lib/export/download-csv';
@@ -20,7 +19,7 @@ type ScreenState =
   | { name: 'done'; result: ParseResult; fileName: string }
   | { name: 'failed'; message: string };
 
-export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
+export function UploadStatementView() {
   const [screen, setScreen] = useState<ScreenState>({ name: 'idle' });
   const [password, setPassword] = useState('');
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -250,11 +249,7 @@ export function UploadStatementView({ isSignedIn }: { isSignedIn: boolean }) {
         )}
 
         {screen.name === 'done' && (
-          <StatementSummary
-            result={screen.result}
-            fileName={screen.fileName}
-            isSignedIn={isSignedIn}
-          />
+          <StatementSummary result={screen.result} fileName={screen.fileName} />
         )}
       </SiteContainer>
     </main>
@@ -285,7 +280,7 @@ function StatisticsBand() {
       label: 'Where it runs',
       figure: 'Your browser',
       detail:
-        'The PDF and its password stay on this device. Nothing is stored unless you sign in and choose to save.'
+        'The PDF and its password stay on this device. There is no account to create and no server to store anything.'
     }
   ];
 
@@ -312,64 +307,8 @@ function StatisticsBand() {
   );
 }
 
-function StatementSummary({
-  result,
-  fileName,
-  isSignedIn
-}: {
-  result: ParseResult;
-  fileName: string;
-  isSignedIn: boolean;
-}) {
-  const router = useRouter();
+function StatementSummary({ result, fileName }: { result: ParseResult; fileName: string }) {
   const { meta, transactions, issues } = result;
-
-  const [saveState, setSaveState] = useState<
-    | { name: 'idle' }
-    | { name: 'saving' }
-    | { name: 'saved'; imported: number; duplicates: number }
-    | { name: 'failed'; message: string }
-  >({ name: 'idle' });
-
-  async function handleSave() {
-    setSaveState({ name: 'saving' });
-
-    try {
-      const response = await fetch('/api/statements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileName,
-          meta: {
-            periodStart: meta.periodStart,
-            periodEnd: meta.periodEnd,
-            openingBalance: meta.openingBalance,
-            closingBalance: meta.closingBalance,
-            balanceVerified: meta.balanceVerified,
-            parserVersion: meta.parserVersion
-          },
-          transactions,
-          issues
-        })
-      });
-
-      const body = await response.json();
-
-      if (!response.ok) {
-        setSaveState({ name: 'failed', message: body.error ?? 'Could not save' });
-        return;
-      }
-
-      setSaveState({
-        name: 'saved',
-        imported: body.importedCount,
-        duplicates: body.duplicateCount
-      });
-      router.refresh();
-    } catch {
-      setSaveState({ name: 'failed', message: 'Could not reach the server' });
-    }
-  }
 
   function handleExport(what: 'transactions' | 'issues') {
     const baseName = fileName.replace(/\.pdf$/i, '');
@@ -396,43 +335,6 @@ function StatementSummary({
             <Button variant="outline" size="sm" onClick={() => handleExport('issues')}>
               Download issues
             </Button>
-          )}
-
-          {isSignedIn && saveState.name === 'idle' && (
-            <Button size="sm" onClick={handleSave}>
-              Save this statement
-            </Button>
-          )}
-
-          {!isSignedIn && (
-            <p className="text-sm text-muted-foreground">
-              <Link href="/login" className="underline underline-offset-4">
-                Sign in
-              </Link>{' '}
-              to save this statement
-            </p>
-          )}
-
-          {saveState.name === 'saving' && (
-            <p className="text-sm text-muted-foreground">Saving…</p>
-          )}
-
-          {saveState.name === 'saved' && (
-            <p className="text-sm text-[var(--color-money-in)]">
-              Saved {saveState.imported} transactions
-              {saveState.duplicates > 0 &&
-                `, skipped ${saveState.duplicates} already imported`}
-              .{' '}
-              <Link href="/statements" className="underline underline-offset-4">
-                View your ledger
-              </Link>
-            </p>
-          )}
-
-          {saveState.name === 'failed' && (
-            <p className="text-sm text-destructive" role="alert">
-              {saveState.message}
-            </p>
           )}
         </>
       }

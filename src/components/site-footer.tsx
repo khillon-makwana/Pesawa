@@ -12,13 +12,9 @@ export function SiteFooter() {
           Pesawa financial audit &amp; ledger parser
         </p>
 
-        {/* Also the only route to these on a narrow screen, where the header drops them. */}
         <nav className="flex items-center gap-4">
           <Link href="/privacy" className="eyebrow transition-colors hover:text-foreground">
             Privacy
-          </Link>
-          <Link href="/statements" className="eyebrow transition-colors hover:text-foreground">
-            Ledger
           </Link>
           <span className="eyebrow">© {new Date().getFullYear()} Pesawa</span>
         </nav>

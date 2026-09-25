@@ -34,47 +34,29 @@ const SECTIONS: { id: string; title: string; body: ReactNode }[] = [
   },
   {
     id: 'nothing-is-stored',
-    title: 'Nothing is stored unless you ask',
+    title: 'Nothing is stored anywhere',
     body: (
       <>
         <p>
-          Without an account, nothing is saved anywhere. Close the tab and the data is
-          gone.
-        </p>
-        <p>
-          If you create an account and choose to save a statement, the parsed transaction
-          list is stored — dates, amounts, transaction types, and the counterparty names
-          and partial phone numbers that appear on the statement. The PDF is not stored,
-          and neither is its password.
+          There are no accounts and no database. Nothing you open here is written to a
+          server, because there is no server to write to — the site is static files and
+          the work happens in this tab. Close the tab and the data is gone.
         </p>
 
         <Matrix
           rows={[
-            { label: 'The PDF itself', value: 'Never stored', tone: 'good' },
+            { label: 'The PDF itself', value: 'Never leaves this device', tone: 'good' },
             { label: 'The statement password', value: 'Used once, discarded', tone: 'good' },
             {
-              label: 'Parsed transactions, signed out',
+              label: 'Parsed transactions',
               value: 'Gone when you close the tab',
               tone: 'good'
             },
-            {
-              label: 'Parsed transactions, saved',
-              value: 'Stored until you delete them',
-              tone: 'neutral'
-            }
+            { label: 'Accounts and sign-in', value: 'None', tone: 'good' },
+            { label: 'Cookies and trackers', value: 'None', tone: 'good' }
           ]}
         />
       </>
-    )
-  },
-  {
-    id: 'deleting-your-data',
-    title: 'Deleting your data',
-    body: (
-      <p>
-        Every saved statement can be deleted from its page. Deleting a statement removes
-        its transactions and any recorded parsing issues.
-      </p>
     )
   },
   {
@@ -83,9 +65,8 @@ const SECTIONS: { id: string; title: string; body: ReactNode }[] = [
     body: (
       <>
         <p>
-          This is a portfolio project rather than a commercial service. It is not marketed,
-          and it is shared by link. If you would rather not store anything, use it without
-          an account — every feature except saving works that way.
+          This is a portfolio project rather than a commercial service. It is not
+          marketed, and it is shared by link.
         </p>
         <p>
           Pesawa is not affiliated with Safaricom, and M-PESA is their trademark, not
@@ -154,8 +135,8 @@ export default function PrivacyPage() {
               <span aria-hidden className="text-accent-bright">
                 ■
               </span>
-              Portfolio project · Client-side PDF parsing · No cookies beyond your session,
-              no trackers.
+              Portfolio project · Client-side PDF parsing · No accounts, no cookies, no
+              trackers.
             </p>
           </article>
         </div>
