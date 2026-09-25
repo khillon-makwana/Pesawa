@@ -19,26 +19,27 @@ export async function decryptAndExtractTextItems(
   fileBytes: ArrayBuffer,
   password?: string
 ): Promise<PdfExtractionOutcome> {
-    const isBrowser = typeof window !== 'undefined';
+  const isBrowser = typeof window !== 'undefined';
 
-    // pdf.js ships two builds, and each environment needs a different one.
-    // The browser gets the default build, whose worker is served from public/.
-    // Node gets the legacy build, because the default build resolves its worker
-    // relative to the importing module, which only works under a bundler.
-    // Both must come from the same variant as the worker file, or pdf.js
-    // reports a version mismatch.
-      const pdfjs = isBrowser
+  // pdf.js ships two builds, and each environment needs a different one.
+  // The browser gets the default build, whose worker is served from public/.
+  // Node gets the legacy build, because the default build resolves its worker
+  // relative to the importing module, which only works under a bundler.
+  // Both must come from the same variant as the worker file, or pdf.js
+  // reports a version mismatch.
+  const pdfjs = isBrowser
     ? await import('pdfjs-dist')
     : await import('pdfjs-dist/legacy/build/pdf.mjs');
 
-    if (isBrowser) {
-        // Served from public/ — copied there by the postinstall script.
-        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
-    }
+  if (isBrowser) {
+    // Served from public/ — copied there by the postinstall script.
+    pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
+  }
 
-  let document;
+  // Named for what it is, so it does not read as the browser's `document`.
+  let pdfDocument;
   try {
-    document = await pdfjs.getDocument({
+    pdfDocument = await pdfjs.getDocument({
       data: new Uint8Array(fileBytes),
       password: password ?? ''
     }).promise;
@@ -48,14 +49,14 @@ export async function decryptAndExtractTextItems(
 
   const items: PositionedTextItem[] = [];
 
-    for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
-    const page = await document.getPage(pageNumber);
+  for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+    const page = await pdfDocument.getPage(pageNumber);
 
     // Safari does not support async iteration over ReadableStream, which
     // getTextContent() uses internally. Reading the stream manually avoids it.
     const reader = page.streamTextContent().getReader();
 
-    for (;;) {
+    while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
@@ -77,7 +78,7 @@ export async function decryptAndExtractTextItems(
     }
   }
 
-  return { ok: true, items, pageCount: document.numPages };
+  return { ok: true, items, pageCount: pdfDocument.numPages };
 }
 
 function mapExtractionError(error: unknown): PdfExtractionOutcome {
