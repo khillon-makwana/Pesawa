@@ -2,8 +2,12 @@
   "name": "mpesa-reconcile",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
+    "prebuild": "cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

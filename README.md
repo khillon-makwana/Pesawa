@@ -69,6 +69,24 @@ No server, no database, no environment variables.
 
 That code is preserved, complete and runnable, on the [`with-auth-and-storage`](../../tree/with-auth-and-storage) branch.
 
+## Security
+
+The app sends a Content Security Policy and the usual hardening headers on every route, set in [`next.config.ts`](next.config.ts).
+
+The directive that matters is **`connect-src 'self'`**. Everything else in this project promising that your statement stays on your device is a promise about the code — that no one added a `fetch` to somewhere else, and that no dependency does it quietly. `connect-src 'self'` moves that from a promise to something the browser enforces. No fetch, XHR, WebSocket or beacon can reach another origin. If some future change tried to upload your transactions, the browser would block the request and log it, rather than letting it through.
+
+The rest, briefly:
+
+| Directive                                                                              | Why                                                                                                                     |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `default-src 'self'`                                                                   | Nothing loads from another origin unless a rule below allows it.                                                        |
+| `worker-src 'self' blob:`                                                              | The pdf.js worker is served from `public/`; `blob:` covers its fallback.                                                |
+| `img-src 'self' data: blob:`                                                           | No remote images. Only this origin, and anything the page generates.                                                    |
+| `font-src 'self'`                                                                      | `next/font` downloads Google Fonts at build time and serves them locally, so nothing is fetched from Google at runtime. |
+| `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | No plugins, no rewriting relative URLs, no posting elsewhere, no framing.                                               |
+
+`script-src` and `style-src` allow `'unsafe-inline'`. The strict alternative is a per-request nonce, which needs middleware and would make every route dynamic — losing static delivery. For four static pages that never render user content as HTML, that trade is worth making. `'unsafe-eval'` is added in development only, where the dev server needs it for fast refresh; it is absent from production builds.
+
 ## Running it
 
 Requires Node 20.9 or later.
