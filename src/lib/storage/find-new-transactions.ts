@@ -1,29 +1,47 @@
 import type { Transaction } from '@/lib/parser/types';
 
+export interface KeyedTransaction {
+  transaction: Transaction;
+  key: string;
+}
+
 /**
- * Builds the key that decides whether two rows are the same transaction.
+ * Gives every row in a statement the key that decides whether it is already
+ * saved. Keys are `receiptNo:type:amount:occurrence`.
  *
  * Receipt number alone is not enough: a charge shares its parent's receipt
  * number, so keying on that would treat every charge as a duplicate of the
  * transaction it belongs to.
  *
- * Type alone is not enough either. Two fee rows against one receipt both
- * classify as `charge` — "Customer Transfer of Funds Charge" and "Pay Bill
- * Charge" are separate patterns with the same type — and the balance walk
- * already allows more than two rows to settle together. Dropping the second
- * one would silently unbalance the statement, so the amount is part of the key
- * as well.
+ * Type is not enough either. Two fee rows against one receipt both classify as
+ * `charge` — "Customer Transfer of Funds Charge" and "Pay Bill Charge" are
+ * separate patterns with the same type — and the balance walk already allows
+ * more than two rows to settle together.
  *
- * Two charges on one receipt for the same amount would still collide. That is
- * both very unlikely and impossible to tell apart from a genuine duplicate, so
- * treating it as one row is the right answer anyway.
+ * Amount is still not enough, because those two charges can be for the same
+ * tariff. So rows that match on all three are numbered in the order they appear:
+ * the first gets `:1`, the second `:2`. Two identical charges are therefore two
+ * rows rather than one, and no real money goes missing from the balance walk.
+ *
+ * Numbering by position is what makes re-importing safe. A statement always
+ * lists its rows in the same order, so reading it twice produces the same keys
+ * and the second read adds nothing.
  */
-export function buildTransactionKey(transaction: Transaction): string {
-  return `${transaction.receiptNo}:${transaction.type}:${transaction.amount}`;
+export function keyTransactions(transactions: Transaction[]): KeyedTransaction[] {
+  const occurrencesSoFar = new Map<string, number>();
+
+  return transactions.map(transaction => {
+    const withoutOccurrence = `${transaction.receiptNo}:${transaction.type}:${transaction.amount}`;
+    const occurrence = (occurrencesSoFar.get(withoutOccurrence) ?? 0) + 1;
+
+    occurrencesSoFar.set(withoutOccurrence, occurrence);
+
+    return { transaction, key: `${withoutOccurrence}:${occurrence}` };
+  });
 }
 
 /**
- * Returns the transactions that are not already saved.
+ * Returns the rows that are not already saved, each with its key.
  *
  * Re-uploading a statement that overlaps one already saved is a normal thing to
  * do, so the rows they share are skipped rather than treated as an error.
@@ -31,22 +49,6 @@ export function buildTransactionKey(transaction: Transaction): string {
 export function findNewTransactions(
   incoming: Transaction[],
   existingKeys: Set<string>
-): Transaction[] {
-  const newTransactions: Transaction[] = [];
-  const seenInThisBatch = new Set<string>();
-
-  for (const transaction of incoming) {
-    const key = buildTransactionKey(transaction);
-
-    // A single statement can list the same row twice if it was parsed twice;
-    // guard against that as well as against rows already in storage.
-    if (existingKeys.has(key) || seenInThisBatch.has(key)) {
-      continue;
-    }
-
-    seenInThisBatch.add(key);
-    newTransactions.push(transaction);
-  }
-
-  return newTransactions;
+): KeyedTransaction[] {
+  return keyTransactions(incoming).filter(row => !existingKeys.has(row.key));
 }

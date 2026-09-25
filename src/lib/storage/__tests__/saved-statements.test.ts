@@ -98,6 +98,38 @@ describe('saveStatement', () => {
     expect(await loadAllTransactions()).toHaveLength(2);
   });
 
+  it('adds nothing when the same statement is saved again', async () => {
+    const statement = buildParseResult([
+      buildTransaction({ receiptNo: 'AAA', type: 'send_money', amount: 40000 }),
+      buildTransaction({ receiptNo: 'AAA', type: 'charge', amount: 700 }),
+      buildTransaction({ receiptNo: 'BBB', type: 'paybill_payment', amount: 150000 })
+    ]);
+
+    await saveStatement(statement, 'august.pdf');
+    const second = await saveStatement(statement, 'august.pdf');
+
+    expect(second.savedCount).toBe(0);
+    expect(second.duplicateCount).toBe(3);
+    expect(await loadAllTransactions()).toHaveLength(3);
+  });
+
+  it('keeps both of two identical charges, and still dedupes on re-import', async () => {
+    // Same receipt, same type, same tariff. Two real rows, not one.
+    const statement = buildParseResult([
+      buildTransaction({ receiptNo: 'SAMPLE0A01', type: 'send_money', amount: 40000 }),
+      buildTransaction({ receiptNo: 'SAMPLE0A01', type: 'charge', amount: 700 }),
+      buildTransaction({ receiptNo: 'SAMPLE0A01', type: 'charge', amount: 700 })
+    ]);
+
+    const first = await saveStatement(statement, 'august.pdf');
+    expect(first.savedCount).toBe(3);
+    expect(await loadAllTransactions()).toHaveLength(3);
+
+    const second = await saveStatement(statement, 'august.pdf');
+    expect(second.savedCount).toBe(0);
+    expect(await loadAllTransactions()).toHaveLength(3);
+  });
+
   it('keeps a charge that shares its parent receipt number', async () => {
     await saveStatement(
       buildParseResult([

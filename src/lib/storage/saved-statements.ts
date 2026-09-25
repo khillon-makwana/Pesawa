@@ -1,6 +1,6 @@
 import type { ParseResult, Transaction } from '@/lib/parser/types';
 import type { SavedStatement, StoredTransaction } from './types';
-import { buildTransactionKey, findNewTransactions } from './find-new-transactions';
+import { keyTransactions, findNewTransactions } from './find-new-transactions';
 import {
   readAllStatements,
   readAllTransactions,
@@ -69,6 +69,7 @@ export async function saveStatement(
   const existing = await readAllTransactions();
   const existingByKey = new Map(existing.map(row => [row.key, row]));
 
+  const keyedTransactions = keyTransactions(result.transactions);
   const newTransactions = findNewTransactions(
     result.transactions,
     new Set(existingByKey.keys())
@@ -88,9 +89,9 @@ export async function saveStatement(
     issues: result.issues
   };
 
-  const toWrite: StoredTransaction[] = newTransactions.map(transaction => ({
+  const toWrite: StoredTransaction[] = newTransactions.map(({ transaction, key }) => ({
     ...transaction,
-    key: buildTransactionKey(transaction),
+    key,
     statementIds: [statementId]
   }));
 
@@ -98,8 +99,7 @@ export async function saveStatement(
 
   // Rows this statement shares with one already saved: record that this
   // statement contains them too.
-  for (const transaction of result.transactions) {
-    const key = buildTransactionKey(transaction);
+  for (const { key } of keyedTransactions) {
     const alreadySaved = existingByKey.get(key);
 
     if (alreadySaved !== undefined && !alreadySaved.statementIds.includes(statementId)) {
