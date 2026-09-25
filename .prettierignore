@@ -1,0 +1,6 @@
+.next
+node_modules
+package-lock.json
+
+# Vendored, minified third-party code copied in by the postinstall script.
+public/pdf.worker.min.mjs
