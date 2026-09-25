@@ -179,22 +179,22 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-primary text-left text-primary-foreground">
-                  <th className="eyebrow w-12 px-4 py-3 font-normal text-primary-foreground/70">
+                  <th className="eyebrow w-12 px-4 py-3 font-normal text-primary-foreground/80">
                     #
                   </th>
-                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/70">
+                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/80">
                     Date &amp; time
                   </th>
-                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/70">
+                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/80">
                     Type
                   </th>
-                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/70">
+                  <th className="eyebrow px-4 py-3 font-normal text-primary-foreground/80">
                     Counterparty / description
                   </th>
-                  <th className="eyebrow px-4 py-3 text-right font-normal text-primary-foreground/70">
+                  <th className="eyebrow px-4 py-3 text-right font-normal text-primary-foreground/80">
                     Amount (KSh)
                   </th>
-                  <th className="eyebrow px-4 py-3 text-right font-normal text-primary-foreground/70">
+                  <th className="eyebrow px-4 py-3 text-right font-normal text-primary-foreground/80">
                     Balance (KSh)
                   </th>
                 </tr>

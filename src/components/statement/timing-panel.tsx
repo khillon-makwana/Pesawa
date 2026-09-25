@@ -33,7 +33,9 @@ export function TimingPanel({ transactions }: { transactions: Transaction[] }) {
               key={bucket.label}
               title={`${bucket.label}: ${bucket.transactionCount} transactions`}
               className={`flex-1 rounded-sm transition-colors ${
-                isPeak ? 'bg-primary' : 'bg-[var(--color-money-in)]/35 hover:bg-[var(--color-money-in)]/60'
+                isPeak
+                  ? 'bg-[var(--chart-peak)]'
+                  : 'bg-[var(--color-money-in)]/35 hover:bg-[var(--color-money-in)]/60'
               }`}
               style={{
                 height: `${Math.max((bucket.transactionCount / peakCount) * 100, 2)}%`,

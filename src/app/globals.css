@@ -28,9 +28,11 @@
   --secondary: #DCEBDF;
   --secondary-foreground: #0C3B2A;
 
-  /* Charges. --accent clears 4.5:1 on both the page and a card (4.75 / 5.25);
+  /* Charges. --accent clears 4.5:1 on the page, on a card, and on its own 12%
+     tint inside a badge (5.19 / 5.73 / 4.84). That last one is why it is this
+     dark: at #AA5424 the badge landed on 4.44.
      --accent-bright is for large figures and anything on a dark surface. */
-  --accent: #AA5424;
+  --accent: #A34E20;
   --accent-bright: #E8834A;
   --accent-foreground: #FFFFFF;
 
@@ -56,7 +58,75 @@
   --category-5: #A5D8BB;
   --category-6: #CDE9D8;
 
+  /* Money in / money out. Always paired with a sign, never colour alone. */
+  --money-in: #1C7A4C;
+
+  /* The busiest bar in the timing chart. Its own token because the colour that
+     stands out against a card differs by theme. */
+  --chart-peak: #0C3B2A;
+
   --radius: 0.5rem;
+}
+
+/*
+ * Dark theme. Only the raw values change; every semantic token in @theme below
+ * points at these, so components need no dark: variants at all.
+ *
+ * The page is near-black green and the two inverted panels sit ABOVE it rather
+ * than below. In light mode --surface-dark and --surface-deep are dark islands
+ * on a pale page; here they are lifted panels on a darker one, with
+ * --surface-deep the more prominent of the two so the charges hero still reads
+ * as the heavier block.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0B1310;
+    --foreground: #E4EFE7;
+    --card: #16211C;
+    --card-foreground: #E4EFE7;
+
+    /* Dark enough for white text to clear 4.5:1 (6.22), light enough for the
+       button to clear 3:1 against the page (3.03). The range that satisfies
+       both is narrow. */
+    --primary: #1F6E46;
+    --primary-foreground: #FFFFFF;
+
+    --surface-dark: #1A2620;
+    --surface-deep: #21302A;
+
+    --secondary: #1E2C25;
+    --secondary-foreground: #CFE6D7;
+
+    --accent: #E0854E;
+    --accent-bright: #F09A62;
+    --accent-foreground: #180D05;
+
+    --muted: #18231E;
+    --muted-foreground: #9CB2A4;
+
+    --destructive: #F08163;
+    --destructive-foreground: #180A06;
+
+    /* --input is lighter than --border on purpose: a field outline identifies a
+       control and clears 3:1 against the card, while a divider does not need to
+       shout. */
+    --border: #2E3E36;
+    --input: #5E7A67;
+    --ring: #4FAE7C;
+
+    /* The ramp runs light to mid rather than dark to light. On a dark card the
+       heaviest-looking colour is the brightest, and every step stays visible —
+       the light-mode ramp's dark end would disappear here. */
+    --category-1: #B7E3C9;
+    --category-2: #8ACFA8;
+    --category-3: #5FB98A;
+    --category-4: #3D9E6E;
+    --category-5: #2C8257;
+    --category-6: #226644;
+
+    --money-in: #4FC98A;
+    --chart-peak: #4FC98A;
+  }
 }
 
 @theme inline {
@@ -82,7 +152,7 @@
   --color-ring: var(--ring);
 
   /* Money in / money out. Always paired with a sign, never colour alone. */
-  --color-money-in: #1C7A4C;
+  --color-money-in: var(--money-in);
   --color-money-out: var(--foreground);
 
   --font-sans: var(--font-geist-sans);
