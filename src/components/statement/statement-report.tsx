@@ -119,6 +119,15 @@ export function StatementReport({
  * Nairobi time, and rendering it in the viewer's zone would both disagree with
  * the timing chart and shift dates between the server and the browser.
  */
+function formatInNairobi(date: Date, options: Intl.DateTimeFormatOptions): string {
+  return date.toLocaleDateString('en-KE', { ...options, timeZone: STATEMENT_TIME_ZONE });
+}
+
+const DAY = { day: 'numeric' } as const;
+const MONTH = { month: 'short' } as const;
+const MONTH_AND_YEAR = { month: 'short', year: 'numeric' } as const;
+const DAY_AND_MONTH = { day: 'numeric', month: 'short' } as const;
+
 function formatPeriod(start: string | null, end: string | null): string {
   if (start === null || end === null || start === '' || end === '') {
     return 'Period unknown';
@@ -131,33 +140,13 @@ function formatPeriod(start: string | null, end: string | null): string {
     return `${start.slice(0, 10)} – ${end.slice(0, 10)}`;
   }
 
-  const day = (date: Date) =>
-    date.toLocaleDateString('en-KE', { day: 'numeric', timeZone: STATEMENT_TIME_ZONE });
-  const monthAndYear = (date: Date) =>
-    date.toLocaleDateString('en-KE', {
-      month: 'short',
-      year: 'numeric',
-      timeZone: STATEMENT_TIME_ZONE
-    });
-
-  if (monthAndYear(from) === monthAndYear(to)) {
-    const month = to.toLocaleDateString('en-KE', {
-      month: 'short',
-      timeZone: STATEMENT_TIME_ZONE
-    });
-    return `${day(from)}–${day(to)} ${month}`;
+  // Within one month the month is named once: "1–30 Jun".
+  if (formatInNairobi(from, MONTH_AND_YEAR) === formatInNairobi(to, MONTH_AND_YEAR)) {
+    return (
+      `${formatInNairobi(from, DAY)}–${formatInNairobi(to, DAY)} ` +
+      formatInNairobi(to, MONTH)
+    );
   }
 
-  const fromLabel = from.toLocaleDateString('en-KE', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: STATEMENT_TIME_ZONE
-  });
-  const toLabel = to.toLocaleDateString('en-KE', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: STATEMENT_TIME_ZONE
-  });
-
-  return `${fromLabel} – ${toLabel}`;
+  return `${formatInNairobi(from, DAY_AND_MONTH)} – ${formatInNairobi(to, DAY_AND_MONTH)}`;
 }
