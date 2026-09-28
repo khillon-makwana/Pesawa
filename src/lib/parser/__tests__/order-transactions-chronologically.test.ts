@@ -102,6 +102,7 @@ describe('orderTransactionsChronologically', () => {
     expect(issues).toHaveLength(1);
     expect(issues[0].type).toBe('balance_break');
     expect(issues[0].detail).toContain('BAD');
+    expect(issues[0]).toMatchObject({ code: 'no_consistent_order', receiptNo: 'BAD' });
     expect(transactions).toHaveLength(2); // nothing dropped
   });
 
@@ -115,6 +116,44 @@ describe('orderTransactionsChronologically', () => {
     const { transactions } = orderTransactionsChronologically(newestFirst);
 
     expect(transactions.map(t => t.receiptNo)).toEqual(['X', 'Y', 'X']);
+  });
+
+  it('reports entries that could have happened in either order', () => {
+    // Money in then out, or out then in: both chains add up, and the two rows
+    // print different balances, so the statement genuinely does not say which.
+    const { issues } = orderTransactionsChronologically([
+      buildTransaction({
+        receiptNo: 'EITHER',
+        direction: 'out',
+        amount: 100,
+        balanceAfter: 900
+      }),
+      buildTransaction({
+        receiptNo: 'EITHER',
+        direction: 'in',
+        amount: 100,
+        balanceAfter: 1000
+      })
+    ]);
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({ code: 'ambiguous_order', receiptNo: 'EITHER' });
+  });
+
+  it('leaves a group too large to reorder in statement order', () => {
+    const rows = [1, 2, 3, 4].map(step =>
+      buildTransaction({ receiptNo: 'BIG', amount: 100, balanceAfter: step * 100 })
+    );
+
+    const { transactions, issues } = orderTransactionsChronologically(rows);
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      code: 'group_too_large',
+      receiptNo: 'BIG',
+      rowCount: 4
+    });
+    expect(transactions).toHaveLength(4);
   });
 
   it('handles an empty statement', () => {

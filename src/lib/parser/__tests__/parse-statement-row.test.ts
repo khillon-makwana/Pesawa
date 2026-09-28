@@ -91,6 +91,7 @@ describe('parseStatementRow', () => {
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
       expect(outcome.reason).toContain('Failed');
+      expect(outcome.code).toBe('row_skipped_status');
     });
 
     it('rejects an unreadable completion time', () => {
@@ -99,6 +100,7 @@ describe('parseStatementRow', () => {
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
       expect(outcome.reason).toContain('completion time');
+      expect(outcome.code).toBe('row_unreadable_time');
     });
 
     it('rejects an unreadable balance', () => {
@@ -107,6 +109,7 @@ describe('parseStatementRow', () => {
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
       expect(outcome.reason).toContain('balance');
+      expect(outcome.code).toBe('row_unreadable_balance');
     });
 
     it('rejects a row with neither amount', () => {
@@ -115,6 +118,7 @@ describe('parseStatementRow', () => {
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
       expect(outcome.reason).toContain('neither');
+      expect(outcome.code).toBe('row_missing_amount');
     });
 
     it('rejects a row with both amounts — it means two rows were merged', () => {
@@ -128,6 +132,7 @@ describe('parseStatementRow', () => {
       expect(outcome.ok).toBe(false);
       if (outcome.ok) return;
       expect(outcome.reason).toContain('both');
+      expect(outcome.code).toBe('row_both_amounts');
     });
   });
 

@@ -103,6 +103,72 @@ describe('export and import round trip', () => {
     expect(transaction.balanceAfter).toBe(999999);
   });
 
+  it('keeps the facts behind each issue, so restored issues stay explainable', async () => {
+    const withIssue = buildParseResult([buildTransaction({ receiptNo: 'AAA' })]);
+    withIssue.issues = [
+      {
+        type: 'balance_break',
+        page: 2,
+        rawText: null,
+        detail: 'Balance break at receipt AAA',
+        code: 'balance_mismatch',
+        receiptNo: 'AAA',
+        expectedBalanceInCents: 435000,
+        printedBalanceInCents: 395000
+      }
+    ];
+    await saveStatement(withIssue, 'august.pdf');
+
+    const backup = await buildBackupFile();
+    await deleteAllSavedData();
+
+    const parsed = parseBackupFile(JSON.stringify(backup));
+    if (!parsed.ok) throw new Error(parsed.error);
+    await importBackup(parsed.backup);
+
+    const [statement] = await listSavedStatements();
+    expect(statement.issues[0]).toMatchObject({
+      code: 'balance_mismatch',
+      receiptNo: 'AAA',
+      expectedBalanceInCents: 435000,
+      printedBalanceInCents: 395000
+    });
+  });
+
+  it('still imports a backup made before issues carried codes', () => {
+    const outcome = parseBackupFile(
+      JSON.stringify({
+        schemaVersion: BACKUP_SCHEMA_VERSION,
+        exportedAt: '2026-09-25',
+        statements: [
+          {
+            id: 's1',
+            fileName: 'old.pdf',
+            periodStart: '',
+            periodEnd: '',
+            savedAt: '2026-09-01T00:00:00.000Z',
+            transactionCount: 0,
+            openingBalance: 0,
+            closingBalance: 0,
+            balanceVerified: false,
+            parserVersion: '0.1.0',
+            issues: [
+              {
+                type: 'balance_break',
+                page: 1,
+                rawText: null,
+                detail: 'Balance break at receipt X'
+              }
+            ]
+          }
+        ],
+        transactions: []
+      })
+    );
+
+    expect(outcome.ok).toBe(true);
+  });
+
   it('carries the schema version', async () => {
     const backup = await buildBackupFile();
     expect(backup.schemaVersion).toBe(BACKUP_SCHEMA_VERSION);

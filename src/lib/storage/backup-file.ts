@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TRANSACTION_TYPES } from '@/lib/parser/types';
+import { ISSUE_CODES, TRANSACTION_TYPES } from '@/lib/parser/types';
 import { BACKUP_SCHEMA_VERSION, type BackupFile } from './types';
 import {
   readAllStatements,
@@ -11,7 +11,19 @@ const parseIssueSchema = z.object({
   type: z.enum(['unparsed_row', 'balance_break', 'unknown_type']),
   page: z.number().nullable(),
   rawText: z.string().nullable(),
-  detail: z.string()
+  detail: z.string(),
+
+  // All optional: backups made before issues carried codes have none of these,
+  // and must still import. Listed rather than left out, because Zod drops any
+  // field it is not told about — a restored issue would lose its code and fall
+  // back to the technical wording.
+  code: z.enum(ISSUE_CODES).optional(),
+  receiptNo: z.string().optional(),
+  status: z.string().optional(),
+  rowCount: z.number().int().optional(),
+  amountInCents: z.number().int().optional(),
+  expectedBalanceInCents: z.number().int().optional(),
+  printedBalanceInCents: z.number().int().optional()
 });
 
 const storedTransactionSchema = z.object({

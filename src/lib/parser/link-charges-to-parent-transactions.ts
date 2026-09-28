@@ -55,7 +55,10 @@ export function linkChargesToParentTransactions(
         type: 'unparsed_row',
         page: transaction.sourcePage,
         rawText: transaction.detailsRaw,
-        detail: `Charge ${transaction.receiptNo}: linked transaction not found in this statement`
+        detail: `Charge ${transaction.receiptNo}: linked transaction not found in this statement`,
+        code: 'charge_without_payment',
+        receiptNo: transaction.receiptNo,
+        amountInCents: transaction.amount
       });
       return transaction;
     }

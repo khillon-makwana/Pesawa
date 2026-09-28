@@ -1,4 +1,4 @@
-import type { RawRow, Transaction, Confidence } from './types';
+import type { RawRow, Transaction, Confidence, IssueCode } from './types';
 import { classifyTransactionType } from './classify-transaction-type';
 import { extractCounterparty } from './extract-counterparty';
 import { parseAmountToCents } from './parse-amount-to-cents';
@@ -10,7 +10,7 @@ const STATEMENT_TIMEZONE_OFFSET = '+03:00';
 const REVENUE_TYPES = new Set(['payment_received']);
 
 export type RowParseOutcome =
-  { ok: true; transaction: Transaction } | { ok: false; reason: string };
+  { ok: true; transaction: Transaction } | { ok: false; code: IssueCode; reason: string };
 
 /**
  * "2026-06-05 16:30:45" -> "2026-06-05T16:30:45.000Z" (adjusted for EAT).
@@ -43,27 +43,47 @@ function combineConfidence(...levels: Confidence[]): Confidence {
  */
 export function parseStatementRow(row: RawRow): RowParseOutcome {
   if (row.status.trim().toLowerCase() !== 'completed') {
-    return { ok: false, reason: `Skipped row with status "${row.status}"` };
+    return {
+      ok: false,
+      code: 'row_skipped_status',
+      reason: `Skipped row with status "${row.status}"`
+    };
   }
 
   const completedAt = parseCompletionTimeToIso(row.completionTime);
   if (completedAt === null) {
-    return { ok: false, reason: `Unreadable completion time "${row.completionTime}"` };
+    return {
+      ok: false,
+      code: 'row_unreadable_time',
+      reason: `Unreadable completion time "${row.completionTime}"`
+    };
   }
 
   const paidIn = parseAmountToCents(row.paidIn);
   const withdrawn = parseAmountToCents(row.withdrawn);
 
   if (paidIn === null && withdrawn === null) {
-    return { ok: false, reason: 'Row has neither a paid-in nor a withdrawn amount' };
+    return {
+      ok: false,
+      code: 'row_missing_amount',
+      reason: 'Row has neither a paid-in nor a withdrawn amount'
+    };
   }
   if (paidIn !== null && withdrawn !== null) {
-    return { ok: false, reason: 'Row has both a paid-in and a withdrawn amount' };
+    return {
+      ok: false,
+      code: 'row_both_amounts',
+      reason: 'Row has both a paid-in and a withdrawn amount'
+    };
   }
 
   const balanceAfter = parseAmountToCents(row.balance);
   if (balanceAfter === null) {
-    return { ok: false, reason: `Unreadable balance "${row.balance}"` };
+    return {
+      ok: false,
+      code: 'row_unreadable_balance',
+      reason: `Unreadable balance "${row.balance}"`
+    };
   }
 
   const direction = paidIn !== null ? 'in' : 'out';

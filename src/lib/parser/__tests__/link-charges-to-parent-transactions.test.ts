@@ -75,6 +75,11 @@ describe('linkChargesToParentTransactions', () => {
 
     expect(issues).toHaveLength(1);
     expect(issues[0].detail).toContain('SAMPLE0A04');
+    expect(issues[0]).toMatchObject({
+      code: 'charge_without_payment',
+      receiptNo: 'SAMPLE0A04',
+      amountInCents: 700
+    });
   });
 
   it('does not link two adjacent charges to each other', () => {

@@ -145,6 +145,37 @@ of the missing transaction.
 This is the strongest correctness check available, because Safaricom supplies
 the answer.
 
+## Issues
+
+Every issue carries a `code` naming exactly which case it is, alongside the
+facts behind it — receipt, page, amounts, status. The coarse `type` field
+could not do this: a skipped Failed row and an unreadable balance are both
+`unparsed_row`.
+
+| Code                     | Raised by      | Means                                           |
+| ------------------------ | -------------- | ----------------------------------------------- |
+| `balance_mismatch`       | balance walk   | the running balance does not add up             |
+| `charge_without_payment` | charge linking | a fee with no payment in this statement         |
+| `row_unreadable_time`    | row parsing    | the completion time could not be read           |
+| `row_unreadable_balance` | row parsing    | the balance could not be read                   |
+| `row_missing_amount`     | row parsing    | neither paid in nor withdrawn                   |
+| `row_both_amounts`       | row parsing    | both paid in and withdrawn                      |
+| `no_consistent_order`    | ordering       | no arrangement of a receipt's rows adds up      |
+| `row_skipped_status`     | row parsing    | a row not marked Completed was left out         |
+| `ambiguous_order`        | ordering       | more than one arrangement adds up               |
+| `group_too_large`        | ordering       | too many rows on one receipt to try every order |
+
+The parser still writes its technical `detail` text, which goes to the issues
+CSV. The screen does not show it directly: `explainIssue` in
+`src/components/statement/` turns the code into plain words, and sorts each
+issue into _needs attention_ or _for information_.
+
+Only the last three codes are informational. Everything else, including an
+issue saved before codes existed, defaults to needing attention — a problem
+shown too loudly costs a moment, one shown too quietly can hide missing money.
+Treating a skipped row as informational is backed by the balance walk: if that
+row had moved money, the walk raises `balance_mismatch` right after it.
+
 ## Known limitations
 
 **Bundle purchases.** The shortcode and product name are printed with no

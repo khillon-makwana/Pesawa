@@ -48,12 +48,47 @@ export interface Transaction {
   sourcePage: number;
 }
 
+/**
+ * Exactly which problem an issue is. `type` is too coarse to explain an issue
+ * to someone — a skipped Failed row and an unreadable balance are both
+ * 'unparsed_row' — so the code says which case it is, and the screen turns
+ * that into plain words.
+ */
+export const ISSUE_CODES = [
+  'balance_mismatch',
+  'charge_without_payment',
+  'row_skipped_status',
+  'row_unreadable_time',
+  'row_unreadable_balance',
+  'row_missing_amount',
+  'row_both_amounts',
+  'no_consistent_order',
+  'ambiguous_order',
+  'group_too_large'
+] as const;
+
+export type IssueCode = (typeof ISSUE_CODES)[number];
+
 /** Something the parser could not handle cleanly. */
 export interface ParseIssue {
   type: 'unparsed_row' | 'balance_break' | 'unknown_type';
   page: number | null;
   rawText: string | null;
+  /** The technical description. Kept for the CSV export and bug reports. */
   detail: string;
+
+  /*
+   * The facts behind the issue, so it can be explained without re-reading
+   * `detail`. Every field is optional because issues saved before these
+   * existed have none of them, and each code only fills the ones it needs.
+   */
+  code?: IssueCode;
+  receiptNo?: string;
+  status?: string;
+  rowCount?: number;
+  amountInCents?: number;
+  expectedBalanceInCents?: number;
+  printedBalanceInCents?: number;
 }
 
 export interface StatementMeta {

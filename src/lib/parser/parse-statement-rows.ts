@@ -39,12 +39,20 @@ export function parseStatementRows(
     if (outcome.ok) {
       parsedTransactions.push(outcome.transaction);
     } else {
-      issues.push({
+      const issue: ParseIssue = {
         type: 'unparsed_row',
         page: row.page,
         rawText: row.details,
-        detail: outcome.reason
-      });
+        detail: outcome.reason,
+        code: outcome.code
+      };
+
+      // The status is the whole explanation for a skipped row ("Failed").
+      if (outcome.code === 'row_skipped_status') {
+        issue.status = row.status;
+      }
+
+      issues.push(issue);
     }
   }
 

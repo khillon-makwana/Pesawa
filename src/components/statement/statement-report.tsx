@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { Transaction } from '@/lib/parser/types';
+import type { ParseIssue, Transaction } from '@/lib/parser/types';
 import { formatKsh } from './format';
 import { STATEMENT_TIME_ZONE } from './time-zone';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { MoneyFlowPanel, CashFlowPanel } from './money-flow-panel';
 import { CounterpartiesPanel } from './counterparties-panel';
 import { TimingPanel } from './timing-panel';
 import { TransactionList } from './transaction-list';
+import { IssuesPanel } from './issues-panel';
 
 export interface StatementReportMeta {
   periodStart: string | null;
@@ -32,7 +33,7 @@ export function StatementReport({
 }: {
   meta: StatementReportMeta;
   transactions: Transaction[];
-  issues: { detail: string }[];
+  issues: ParseIssue[];
   heading?: string;
   above?: ReactNode;
   actions?: ReactNode;
@@ -65,9 +66,9 @@ export function StatementReport({
             <span aria-hidden>·</span>
             <span>Closing {formatKsh(meta.closingBalance)}</span>
             {meta.balanceVerified ? (
-              <Badge variant="money-in">Balance verified</Badge>
+              <Badge variant="money-in">Balances add up</Badge>
             ) : (
-              <Badge variant="charge">Balance not verified</Badge>
+              <Badge variant="charge">Balances don&apos;t add up</Badge>
             )}
           </p>
         </div>
@@ -77,22 +78,7 @@ export function StatementReport({
         )}
       </div>
 
-      {issues.length > 0 && (
-        <section className="rounded-lg border border-accent/40 bg-accent/5 p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <span aria-hidden className="text-accent">
-              ▲
-            </span>
-            {issues.length} {issues.length === 1 ? 'issue' : 'issues'} found in this
-            statement
-          </h2>
-          <ul className="mt-2 space-y-1 pl-6 text-sm text-muted-foreground">
-            {issues.map((issue, index) => (
-              <li key={index}>{issue.detail}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <IssuesPanel issues={issues} />
 
       <ChargesPanel transactions={transactions} />
 

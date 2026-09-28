@@ -75,6 +75,14 @@ describe('verifyBalance', () => {
     expect(result.issues).toHaveLength(1);
     expect(result.issues[0].detail).toContain('B');
     expect(result.issues[0].detail).toContain('3000.00'); // the missing amount
+    // The structured facts must match the arithmetic, since the plain-language
+    // explanation is built from them rather than from the text above.
+    expect(result.issues[0]).toMatchObject({
+      code: 'balance_mismatch',
+      receiptNo: 'B',
+      expectedBalanceInCents: 1300000,
+      printedBalanceInCents: 1000000
+    });
   });
 
   it('detects a direction that was read the wrong way round', () => {

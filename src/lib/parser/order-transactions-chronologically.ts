@@ -1,4 +1,4 @@
-import type { Transaction, ParseIssue } from './types';
+import type { Transaction, ParseIssue, IssueCode } from './types';
 
 export interface OrderingResult {
   transactions: Transaction[];
@@ -95,12 +95,15 @@ function groupAdjacentByReceiptNumber(transactions: Transaction[]): Transaction[
   return groups;
 }
 
-function balanceBreak(group: Transaction[], detail: string): ParseIssue {
+function balanceBreak(group: Transaction[], code: IssueCode, detail: string): ParseIssue {
   return {
     type: 'balance_break',
     page: group[0].sourcePage,
     rawText: null,
-    detail
+    detail,
+    code,
+    receiptNo: group[0].receiptNo,
+    rowCount: group.length
   };
 }
 
@@ -117,6 +120,7 @@ function orderOneGroup(group: Transaction[], issues: ParseIssue[]): Transaction[
     issues.push(
       balanceBreak(
         group,
+        'group_too_large',
         `Receipt ${group[0].receiptNo} has ${group.length} rows; left in statement order`
       )
     );
@@ -133,6 +137,7 @@ function orderOneGroup(group: Transaction[], issues: ParseIssue[]): Transaction[
     issues.push(
       balanceBreak(
         group,
+        'no_consistent_order',
         `No ordering of receipt ${group[0].receiptNo} produces a consistent balance`
       )
     );
@@ -147,6 +152,7 @@ function orderOneGroup(group: Transaction[], issues: ParseIssue[]): Transaction[
     issues.push(
       balanceBreak(
         group,
+        'ambiguous_order',
         `Receipt ${group[0].receiptNo} has ${validOrderings.length} possible orderings`
       )
     );

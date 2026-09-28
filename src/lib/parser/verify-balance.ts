@@ -74,7 +74,11 @@ export function verifyBalance(
           `Balance break at receipt ${event[0].receiptNo}${rowCount}: ` +
           `expected ${formatCentsForMessage(expectedBalance)}, ` +
           `statement shows ${formatCentsForMessage(printedBalance)} ` +
-          `(off by ${formatCentsForMessage(discrepancy)})`
+          `(off by ${formatCentsForMessage(discrepancy)})`,
+        code: 'balance_mismatch',
+        receiptNo: event[0].receiptNo,
+        expectedBalanceInCents: expectedBalance,
+        printedBalanceInCents: printedBalance
       });
     }
 
