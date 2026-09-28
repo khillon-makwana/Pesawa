@@ -221,24 +221,37 @@ export function UploadStatementView() {
                 Never enter your PIN here or anywhere else.
               </p>
 
-              <div className="mt-4 flex gap-2">
+              {/*
+                A real form rather than an input beside a button: it makes Enter
+                submit without a key handler, and a password field outside a
+                form is something browsers warn about.
+              */}
+              <form
+                className="mt-4 flex gap-2"
+                onSubmit={event => {
+                  event.preventDefault();
+                  void parse(screen.file, password);
+                }}
+              >
                 <Input
                   id="statement-password"
+                  name="statement-password"
                   type="password"
                   value={password}
                   onChange={event => setPassword(event.target.value)}
-                  onKeyDown={event => {
-                    if (event.key === 'Enter' && screen.name === 'needs_password') {
-                      void parse(screen.file, password);
-                    }
-                  }}
+                  /*
+                   * Not offered to a password manager. This unlocks one
+                   * document and is discarded straight after; it is not a
+                   * credential for this site, and the page says as much.
+                   */
+                  autoComplete="off"
                   autoFocus
                   className="min-w-0 flex-1"
                 />
-                <Button onClick={() => void parse(screen.file, password)} size="lg">
+                <Button type="submit" size="lg">
                   Open
                 </Button>
-              </div>
+              </form>
 
               {screen.hadWrongPassword && (
                 <p className="mt-3 text-sm text-destructive" role="alert">

@@ -147,6 +147,8 @@ export function TransactionList({ transactions }: { transactions: Transaction[] 
         </h3>
 
         <Input
+          id="transaction-filter"
+          name="transaction-filter"
           type="search"
           value={filter}
           onChange={event => setFilter(event.target.value)}

@@ -25,8 +25,19 @@ const contentSecurityPolicy = [
   // Default for anything not named below: this origin only.
   "default-src 'self'",
 
-  // Next.js inlines its bootstrap script; see the note above on nonces.
-  `script-src 'self' 'unsafe-inline'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+  /*
+   * 'unsafe-inline' is for Next's inlined bootstrap script; see the note above
+   * on nonces.
+   *
+   * 'wasm-unsafe-eval' is for pdf.js, whose worker instantiates WebAssembly
+   * (the jbig2 and openjpeg image decoders). Browsers report blocked
+   * WebAssembly as an eval violation, which is what it looks like in DevTools.
+   * This directive permits WebAssembly compilation and nothing else — it does
+   * NOT allow eval() or new Function() on JavaScript, so it is far narrower
+   * than 'unsafe-eval'. Without it pdf.js falls back to slower JavaScript
+   * decoders and logs a CSP error on every statement.
+   */
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDevelopment ? " 'unsafe-eval'" : ''}`,
 
   // Tailwind ships as a stylesheet, but Next inlines some critical CSS.
   "style-src 'self' 'unsafe-inline'",

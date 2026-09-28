@@ -85,7 +85,9 @@ The rest, briefly:
 | `font-src 'self'`                                                                      | `next/font` downloads Google Fonts at build time and serves them locally, so nothing is fetched from Google at runtime. |
 | `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | No plugins, no rewriting relative URLs, no posting elsewhere, no framing.                                               |
 
-`script-src` and `style-src` allow `'unsafe-inline'`. The strict alternative is a per-request nonce, which needs middleware and would make every route dynamic — losing static delivery. For four static pages that never render user content as HTML, that trade is worth making. `'unsafe-eval'` is added in development only, where the dev server needs it for fast refresh; it is absent from production builds.
+`script-src` and `style-src` allow `'unsafe-inline'`. The strict alternative is a per-request nonce, which needs middleware and would make every route dynamic — losing static delivery. For four static pages that never render user content as HTML, that trade is worth making.
+
+`script-src` also allows `'wasm-unsafe-eval'`, because the pdf.js worker instantiates WebAssembly for its image decoders. That directive permits WebAssembly compilation and nothing else — JavaScript `eval()` and `new Function()` stay blocked. Plain `'unsafe-eval'` is added in development only, where the dev server needs it for fast refresh, and is absent from production builds.
 
 ## Running it
 
