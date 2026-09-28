@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { SiteContainer } from '@/components/site-container';
+import { HomeLink } from '@/components/home-link';
 
 /*
  * Nav items are links, so they get the button's look from buttonVariants
@@ -13,15 +14,12 @@ export function SiteHeader() {
   return (
     <header className="border-b border-border bg-background">
       <SiteContainer className="flex h-16 items-center justify-between gap-4">
-        <Link
-          href="/"
-          className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight"
-        >
+        <HomeLink className="flex items-center gap-2 font-heading text-lg font-bold tracking-tight">
           <span aria-hidden className="text-[0.6em] text-primary">
             ■
           </span>
           Pesawa
-        </Link>
+        </HomeLink>
 
         <nav className="flex items-center gap-1 text-sm">
           <Link href="/saved" className={NAV_LINK}>
