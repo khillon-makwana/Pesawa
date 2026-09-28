@@ -1,21 +1,30 @@
-/** Every transaction type we recognise on an M-Pesa statement. */
-export type TransactionType =
-  | 'payment_received'
-  | 'charge'
-  | 'send_money'
-  | 'paybill_payment'
-  | 'till_payment'
-  | 'bundle_purchase'
-  | 'agent_deposit'
-  | 'agent_withdrawal'
-  | 'airtime'
-  | 'fuliza_loan'
-  | 'fuliza_repayment'
-  | 'reversal'
-  | 'transfer'
-  | 'pochi_payment'
-  | 'unit_trust_investment'
-  | 'unknown';
+/**
+ * Every transaction type we recognise on an M-Pesa statement.
+ *
+ * A runtime list rather than a bare union, so that code validating data from
+ * outside the app — a restored backup, say — can check against the same names
+ * the parser produces instead of keeping its own copy that drifts.
+ */
+export const TRANSACTION_TYPES = [
+  'payment_received',
+  'charge',
+  'send_money',
+  'paybill_payment',
+  'till_payment',
+  'bundle_purchase',
+  'agent_deposit',
+  'agent_withdrawal',
+  'airtime',
+  'fuliza_loan',
+  'fuliza_repayment',
+  'reversal',
+  'transfer',
+  'pochi_payment',
+  'unit_trust_investment',
+  'unknown'
+] as const;
+
+export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 
 export type Direction = 'in' | 'out';
 

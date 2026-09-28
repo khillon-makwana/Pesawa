@@ -11,7 +11,11 @@ import {
   deleteStatement,
   deleteAllSavedData
 } from '../saved-statements';
-import { resetForTests } from '../statement-database';
+import {
+  resetForTests,
+  readAllStatements,
+  readAllTransactions
+} from '../statement-database';
 
 function buildTransaction(overrides: Partial<Transaction> = {}): Transaction {
   return {
@@ -75,13 +79,49 @@ describe('saveStatement', () => {
     expect(await loadAllTransactions()).toHaveLength(2);
   });
 
+  /*
+   * The promise the whole app rests on. These two check what is actually in
+   * the database rather than what the code looks like it writes, so a field
+   * added carelessly later has to fail here first.
+   */
   it('never stores the PDF or its password', async () => {
     await saveStatement(buildParseResult([buildTransaction()]), 'august.pdf');
 
-    const [statement] = await listSavedStatements();
-    const storedFields = Object.keys(statement).join(' ');
+    const everythingStored = JSON.stringify([
+      await readAllStatements(),
+      await readAllTransactions()
+    ]).toLowerCase();
 
-    expect(storedFields).not.toMatch(/password|pdf|bytes|file(?!Name)/i);
+    for (const forbidden of [
+      'password',
+      'passcode',
+      'bytes',
+      'arraybuffer',
+      'blob',
+      'base64'
+    ]) {
+      expect(everythingStored).not.toContain(forbidden);
+    }
+  });
+
+  it('stores only the fields a saved statement declares', async () => {
+    await saveStatement(buildParseResult([buildTransaction()]), 'august.pdf');
+
+    const [statement] = await listSavedStatements();
+
+    expect(Object.keys(statement).sort()).toEqual([
+      'balanceVerified',
+      'closingBalance',
+      'fileName',
+      'id',
+      'issues',
+      'openingBalance',
+      'parserVersion',
+      'periodEnd',
+      'periodStart',
+      'savedAt',
+      'transactionCount'
+    ]);
   });
 
   it('skips rows already saved by an earlier statement', async () => {

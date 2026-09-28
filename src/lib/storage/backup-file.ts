@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TRANSACTION_TYPES } from '@/lib/parser/types';
 import { BACKUP_SCHEMA_VERSION, type BackupFile } from './types';
 import {
   readAllStatements,
@@ -19,7 +20,9 @@ const storedTransactionSchema = z.object({
   receiptNo: z.string(),
   completedAt: z.string(),
   detailsRaw: z.string(),
-  type: z.string(),
+  // The parser's own list, so a hand-edited file cannot introduce a type the
+  // rest of the app has no handling for.
+  type: z.enum(TRANSACTION_TYPES),
   direction: z.enum(['in', 'out']),
   // Money is integer cents everywhere, including in a backup file. A decimal
   // here would mean the file was written by something other than this app.

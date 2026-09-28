@@ -179,6 +179,48 @@ describe('rejecting a file that is not a backup', () => {
     expect(outcome.error).toMatch(/different version of Pesawa/i);
   });
 
+  it('rejects a transaction type the parser would never produce', () => {
+    const outcome = parseBackupFile(
+      JSON.stringify({
+        schemaVersion: BACKUP_SCHEMA_VERSION,
+        exportedAt: '2026-09-25',
+        statements: [],
+        transactions: [
+          { ...buildTransaction(), type: 'not_a_real_type', key: 'k', statementIds: [] }
+        ]
+      })
+    );
+
+    expect(outcome.ok).toBe(false);
+  });
+
+  it('strips unknown fields rather than passing them through', () => {
+    const outcome = parseBackupFile(
+      JSON.stringify({
+        schemaVersion: BACKUP_SCHEMA_VERSION,
+        exportedAt: '2026-09-25',
+        statements: [],
+        transactions: [
+          { ...buildTransaction(), key: 'k', statementIds: [], smuggledField: 'hello' }
+        ]
+      })
+    );
+
+    expect(outcome.ok).toBe(true);
+    if (!outcome.ok) return;
+    expect(JSON.stringify(outcome.backup)).not.toContain('smuggledField');
+  });
+
+  it('cannot pollute Object.prototype through a crafted file', () => {
+    const outcome = parseBackupFile(
+      '{"schemaVersion":1,"exportedAt":"x","statements":[],"transactions":[],' +
+        '"__proto__":{"polluted":"yes"}}'
+    );
+
+    expect(outcome.ok).toBe(true);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+  });
+
   it('rejects an amount that is not integer cents', () => {
     const outcome = parseBackupFile(
       JSON.stringify({
