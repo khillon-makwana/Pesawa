@@ -61,20 +61,22 @@ export function ReceiptPreview() {
               254 712 ••• 894 · 1–31 Oct
             </p>
           </div>
-          <Badge variant="money-in">Reconciled</Badge>
+          <Badge variant="money-in">Balances add up</Badge>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-x-10 gap-y-3 rounded-md bg-muted/60 px-4 py-3">
-          <div>
-            <p className="eyebrow text-muted-foreground">Total charges</p>
-            <p className="tabular mt-1 text-lg font-semibold text-accent">KSh 1,284.50</p>
-          </div>
-          <div>
-            <p className="eyebrow text-muted-foreground">Net inflow</p>
-            <p className="tabular mt-1 text-lg font-semibold text-[var(--color-money-in)]">
-              +KSh 42,910.00
-            </p>
-          </div>
+        {/*
+          Money in and out leads, because that is what the page promises; fees
+          are one line of it rather than the headline. In minus out is the net
+          figure, so the card adds up like the real thing.
+        */}
+        <div className="mt-5 rounded-md bg-muted/60 px-4 py-3">
+          <p className="eyebrow text-muted-foreground">Net inflow</p>
+          <p className="tabular mt-1 text-2xl font-semibold text-[var(--color-money-in)]">
+            +KSh 42,910.00
+          </p>
+          <p className="tabular mt-1.5 text-xs text-muted-foreground">
+            In KSh 96,420.00 · Out KSh 53,510.00 · Fees KSh 1,284.50
+          </p>
         </div>
 
         <table className="mt-5 w-full border-collapse text-left">

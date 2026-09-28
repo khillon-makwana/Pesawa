@@ -122,16 +122,17 @@ function UploadScreens() {
         <SiteContainer className="grid items-start gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:gap-16 lg:py-20">
           <div>
             <p className="eyebrow flex items-center gap-2 text-muted-foreground">
-              <span aria-hidden>—</span> M-PESA statement parser
+              <span aria-hidden>—</span> M-PESA statements, organised
             </p>
 
             <h1 className="mt-4 font-heading text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              See what M-PESA actually costs you
+              Understand where your M-PESA money goes
             </h1>
 
             <p className="mt-5 max-w-lg text-lg text-muted-foreground">
-              Open your statement and get a breakdown of where your money went, what you
-              paid in charges, and who you transact with most.
+              See what came in, what went out, who you deal with most, and what fees cost
+              you. It&apos;s built from your own statement, with every balance checked,
+              and never leaves your browser.
             </p>
 
             <div className="mt-10 rounded-xl border border-dashed border-primary/30 bg-card/60 p-6">

@@ -21,7 +21,8 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: 'Pesawa',
-  description: 'Read and reconcile your M-PESA statements'
+  description:
+    'Understand where your M-PESA money goes. Read in your browser, with every balance checked.'
 };
 
 /*

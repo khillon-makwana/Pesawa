@@ -1,24 +1,24 @@
 import { SiteContainer } from '@/components/site-container';
 
 /*
- * Three things worth knowing before uploading anything. Every figure here is
- * either from the shipped sample statement and labelled as such, or a plain
- * description of what the parser does — nothing is a claim about averages
- * across real users, because there is no such data.
+ * Three things worth knowing before uploading anything. The first figure is
+ * from the real statement described in docs/parsing.md, and is labelled as
+ * such; the others are plain descriptions of what the app does. Nothing here
+ * is a claim about averages across users, because there is no such data.
  */
 export function StatisticsBand() {
   const items = [
     {
-      label: 'In the sample statement',
-      figure: 'KSh 459',
+      label: 'On a real statement',
+      figure: '1 missing',
       detail:
-        'charged across its 90 transactions — the number almost nobody adds up for themselves.'
+        'transaction Safaricom left out of its own statement — found by checking every balance against the one before it.'
     },
     {
-      label: 'Balance check',
-      figure: 'Line by line',
+      label: 'From one statement',
+      figure: 'Every transaction',
       detail:
-        'Every running balance is checked against the one before it, so a missing or reversed entry is reported instead of passing quietly.'
+        'sorted into types, grouped by who it was with, searchable, and ready to export as CSV.'
     },
     {
       label: 'Where it runs',
