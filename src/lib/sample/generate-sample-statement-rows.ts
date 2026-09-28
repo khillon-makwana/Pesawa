@@ -46,6 +46,20 @@ function createRandom(seed: number) {
   };
 }
 
+/**
+ * A phone number printed the way Safaricom prints them on statements, with
+ * the middle digits hidden: 254700***101.
+ *
+ * Masked for the same reason real statements mask them. A full 2547 number
+ * made up at random could easily be someone's real line, and the samples are
+ * public. It takes exactly one draw from `random`, as the unmasked version
+ * did, so every other value in the sample comes out the same.
+ */
+function maskedPhoneNumber(random: () => number): string {
+  const digits = String(Math.floor(random() * 90000000 + 10000000));
+  return `2547${digits.slice(0, 2)}***${digits.slice(5)}`;
+}
+
 function formatCents(cents: number): string {
   const decimal = (Math.abs(cents) / 100).toFixed(2);
   const [whole, fraction] = decimal.split('.');
@@ -133,7 +147,7 @@ export function generateSampleStatement(options: SampleOptions = {}): SampleStat
     if (roll < 0.12 || needsTopUp) {
       const sender = pick(PEOPLE, random);
       addRow(
-        `Funds received from - 2547${Math.floor(random() * 90000000 + 10000000)} ${sender}`,
+        `Funds received from - ${maskedPhoneNumber(random)} ${sender}`,
         Math.round((8_000 + random() * 40_000) * 100),
         'in'
       );
@@ -145,7 +159,7 @@ export function generateSampleStatement(options: SampleOptions = {}): SampleStat
       const recipient = pick(PEOPLE, random);
       const amount = Math.round((100 + random() * 3_000) * 100);
       const { receiptNo, completionTime } = addRow(
-        `Customer Transfer to - 2547${Math.floor(random() * 90000000 + 10000000)} ${recipient}`,
+        `Customer Transfer to - ${maskedPhoneNumber(random)} ${recipient}`,
         amount,
         'out'
       );
@@ -183,7 +197,7 @@ export function generateSampleStatement(options: SampleOptions = {}): SampleStat
 
     if (roll < 0.96) {
       addRow(
-        `Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254700000000 SAMPLE USER`,
+        `Customer Bundle Purchase to 4093441SAFARICOM DATA BUNDLES by - 254700***000 SAMPLE USER`,
         Math.round((20 + random() * 1_000) * 100),
         'out'
       );
