@@ -4,24 +4,13 @@ import { useState } from 'react';
 import type { ParseResult } from '@/lib/parser/types';
 import { parseStatementPdf } from '@/lib/parser/parse-statement-pdf';
 import Link from 'next/link';
-import {
-  buildTransactionsCsv,
-  buildIssuesCsv
-} from '@/lib/export/build-transactions-csv';
-import { downloadCsv } from '@/lib/export/download-csv';
-import { loadParentReceiptNumbers, saveStatement } from '@/lib/storage/saved-statements';
-import { getStorageMode } from '@/lib/storage/statement-database';
-import { StatementReport } from '@/components/statement/statement-report';
+import { useRouter } from 'next/navigation';
+import { useStatementSession } from '@/components/statement-session';
+import { loadParentReceiptNumbers } from '@/lib/storage/saved-statements';
 import { ReceiptPreview } from '@/components/marketing/receipt-preview';
 import { StatisticsBand } from '@/components/marketing/statistics-band';
 import { SiteContainer } from '@/components/site-container';
-import { SessionOnlyNotice } from '@/components/storage-notice';
-import {
-  DocumentGlyph,
-  PlayGlyph,
-  WarningGlyph,
-  DownloadGlyph
-} from '@/components/icons';
+import { DocumentGlyph, PlayGlyph, WarningGlyph } from '@/components/icons';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 
@@ -29,13 +18,34 @@ type ScreenState =
   | { name: 'idle' }
   | { name: 'needs_password'; file: File; hadWrongPassword: boolean }
   | { name: 'parsing' }
-  | { name: 'done'; result: ParseResult; fileName: string }
   | { name: 'failed'; message: string };
 
+/*
+ * Keyed on the session's counter so the logo can bring this page back to its
+ * first screen: changing the key makes React throw the old screens away and
+ * start fresh, dropping any chosen file and typed code with them.
+ */
 export function UploadStatementView() {
+  const { uploadScreenKey } = useStatementSession();
+  return <UploadScreens key={uploadScreenKey} />;
+}
+
+function UploadScreens() {
+  const router = useRouter();
+  const { setOpenStatement } = useStatementSession();
   const [screen, setScreen] = useState<ScreenState>({ name: 'idle' });
   const [password, setPassword] = useState('');
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
+  /*
+   * The report is its own page, so the address says what is on screen and the
+   * Back button returns here. The statement travels in memory, through the
+   * session, never in the address or in browser storage.
+   */
+  function showReport(result: ParseResult, fileName: string) {
+    setOpenStatement({ result, fileName, saved: null });
+    router.push('/report');
+  }
 
   async function parse(file: File, submittedPassword?: string) {
     setScreen({ name: 'parsing' });
@@ -53,7 +63,7 @@ export function UploadStatementView() {
 
     if (outcome.ok) {
       setPassword('');
-      setScreen({ name: 'done', result: outcome.result, fileName: file.name });
+      showReport(outcome.result, file.name);
       return;
     }
 
@@ -85,13 +95,10 @@ export function UploadStatementView() {
       );
 
       if (outcome.ok) {
-        setScreen({
-          name: 'done',
-          result: outcome.result,
-          fileName: withDefect
-            ? 'sample-statement-with-defect.pdf'
-            : 'sample-statement.pdf'
-        });
+        showReport(
+          outcome.result,
+          withDefect ? 'sample-statement-with-defect.pdf' : 'sample-statement.pdf'
+        );
         return;
       }
 
@@ -292,122 +299,7 @@ export function UploadStatementView() {
             </div>
           </div>
         )}
-
-        {screen.name === 'done' && (
-          <StatementSummary result={screen.result} fileName={screen.fileName} />
-        )}
       </SiteContainer>
     </main>
-  );
-}
-
-/*
- * Saving is deliberately opt-in. Parsing a statement shows you the report; it
- * does not put anything in storage until you ask for it here.
- */
-type SaveState =
-  | { name: 'idle' }
-  | { name: 'saving' }
-  | { name: 'saved'; savedCount: number; duplicateCount: number; isSessionOnly: boolean }
-  | { name: 'failed'; message: string };
-
-function StatementSummary({
-  result,
-  fileName
-}: {
-  result: ParseResult;
-  fileName: string;
-}) {
-  const { meta, transactions, issues } = result;
-  const [saveState, setSaveState] = useState<SaveState>({ name: 'idle' });
-
-  async function handleSave() {
-    setSaveState({ name: 'saving' });
-
-    try {
-      const outcome = await saveStatement(result, fileName);
-
-      setSaveState({
-        name: 'saved',
-        savedCount: outcome.savedCount,
-        duplicateCount: outcome.duplicateCount,
-        isSessionOnly: getStorageMode() === 'session-only'
-      });
-    } catch {
-      setSaveState({
-        name: 'failed',
-        message: 'This browser would not let Pesawa store the statement.'
-      });
-    }
-  }
-
-  function handleExport(what: 'transactions' | 'issues') {
-    const baseName = fileName.replace(/\.pdf$/i, '');
-
-    if (what === 'transactions') {
-      downloadCsv(`${baseName}-transactions.csv`, buildTransactionsCsv(transactions));
-    } else {
-      downloadCsv(`${baseName}-issues.csv`, buildIssuesCsv(issues));
-    }
-  }
-
-  return (
-    <StatementReport
-      meta={meta}
-      transactions={transactions}
-      issues={issues}
-      above={
-        getStorageMode() === 'session-only' ? (
-          <SessionOnlyNotice className="mt-8" />
-        ) : undefined
-      }
-      actions={
-        <>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleExport('transactions')}
-          >
-            <DownloadGlyph /> Download CSV
-          </Button>
-
-          {issues.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => handleExport('issues')}>
-              Download issues
-            </Button>
-          )}
-
-          {saveState.name === 'idle' && (
-            <Button size="sm" onClick={() => void handleSave()}>
-              Save on this device
-            </Button>
-          )}
-
-          {saveState.name === 'saving' && (
-            <p className="text-sm text-muted-foreground">Saving…</p>
-          )}
-
-          {saveState.name === 'saved' && (
-            <p className="text-sm text-[var(--color-money-in)]">
-              Saved {saveState.savedCount} transaction
-              {saveState.savedCount === 1 ? '' : 's'} in this browser
-              {saveState.duplicateCount > 0 &&
-                `, skipped ${saveState.duplicateCount} already saved`}
-              .{' '}
-              <Link href="/saved" className="underline underline-offset-4">
-                Saved statements
-              </Link>
-              {saveState.isSessionOnly && ' — for this visit only, see the notice above.'}
-            </p>
-          )}
-
-          {saveState.name === 'failed' && (
-            <p className="text-sm text-destructive" role="alert">
-              {saveState.message}
-            </p>
-          )}
-        </>
-      }
-    />
   );
 }

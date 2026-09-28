@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -10,37 +10,27 @@ vi.mock('next/navigation', () => ({
   usePathname: () => currentPathname
 }));
 
-// Imported after the mock so the component sees the fake pathname.
+// Imported after the mock so the components see the fake pathname.
 const { HomeLink } = await import('../home-link');
+const { StatementSessionProvider, useStatementSession } =
+  await import('../statement-session');
 
-const reload = vi.fn();
-const originalLocation = window.location;
+/** Shows the counter the upload screen is keyed on, so a restart is visible. */
+function UploadScreenKey() {
+  const { uploadScreenKey } = useStatementSession();
+  return <output>{uploadScreenKey}</output>;
+}
 
-beforeEach(() => {
-  reload.mockClear();
-  // jsdom's location cannot be spied on directly, so swap in a stand-in.
-  Object.defineProperty(window, 'location', {
-    configurable: true,
-    value: { ...originalLocation, reload }
-  });
-});
-
-afterEach(() => {
-  Object.defineProperty(window, 'location', {
-    configurable: true,
-    value: originalLocation
-  });
-  document.body.innerHTML = '';
-});
-
-function clickHomeLink(): MouseEvent {
+function render(ui: React.ReactNode): HTMLElement {
   const container = document.createElement('div');
   document.body.appendChild(container);
-
   act(() => {
-    createRoot(container).render(<HomeLink>Pesawa</HomeLink>);
+    createRoot(container).render(ui);
   });
+  return container;
+}
 
+function clickLink(container: HTMLElement): MouseEvent {
   const click = new MouseEvent('click', { bubbles: true, cancelable: true });
   act(() => {
     container.querySelector('a')!.dispatchEvent(click);
@@ -48,21 +38,46 @@ function clickHomeLink(): MouseEvent {
   return click;
 }
 
+afterEach(() => {
+  document.body.innerHTML = '';
+});
+
 describe('HomeLink', () => {
-  it('reloads when already on the home page, so an open report clears', () => {
+  it('restarts the upload screen when already on the home page', () => {
     currentPathname = '/';
+    const container = render(
+      <StatementSessionProvider>
+        <HomeLink>Pesawa</HomeLink>
+        <UploadScreenKey />
+      </StatementSessionProvider>
+    );
 
-    const click = clickHomeLink();
+    const click = clickLink(container);
 
-    expect(reload).toHaveBeenCalledTimes(1);
     expect(click.defaultPrevented).toBe(true);
+    expect(container.querySelector('output')!.textContent).toBe('1');
   });
 
   it('navigates normally from any other page', () => {
-    currentPathname = '/saved';
+    currentPathname = '/report';
+    const container = render(
+      <StatementSessionProvider>
+        <HomeLink>Pesawa</HomeLink>
+        <UploadScreenKey />
+      </StatementSessionProvider>
+    );
 
-    clickHomeLink();
+    clickLink(container);
 
-    expect(reload).not.toHaveBeenCalled();
+    // Left alone, so Next's link handles it as an ordinary navigation.
+    expect(container.querySelector('output')!.textContent).toBe('0');
+  });
+
+  it('is an ordinary link outside the site layout, as on the 404 page', () => {
+    currentPathname = '/';
+    const container = render(<HomeLink>Pesawa</HomeLink>);
+
+    expect(() => clickLink(container)).not.toThrow();
+    expect(container.querySelector('a')!.getAttribute('href')).toBe('/');
   });
 });
