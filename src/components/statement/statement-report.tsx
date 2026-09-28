@@ -4,7 +4,8 @@ import { formatKsh } from './format';
 import { STATEMENT_TIME_ZONE } from './time-zone';
 import { Badge } from '@/components/ui/badge';
 import { ChargesPanel } from './charges-panel';
-import { MoneyFlowPanel, CashFlowPanel } from './money-flow-panel';
+import { MoneyFlowPanel } from './money-flow-panel';
+import { MoneySummary } from './money-summary';
 import { CounterpartiesPanel } from './counterparties-panel';
 import { TimingPanel } from './timing-panel';
 import { TransactionList } from './transaction-list';
@@ -80,15 +81,15 @@ export function StatementReport({
 
       <IssuesPanel issues={issues} />
 
-      <ChargesPanel transactions={transactions} />
+      <MoneySummary transactions={transactions} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
+          <ChargesPanel transactions={transactions} />
           <MoneyFlowPanel transactions={transactions} />
-          <CounterpartiesPanel transactions={transactions} />
         </div>
         <div className="space-y-6">
-          <CashFlowPanel transactions={transactions} />
+          <CounterpartiesPanel transactions={transactions} />
           <TimingPanel transactions={transactions} />
         </div>
       </div>

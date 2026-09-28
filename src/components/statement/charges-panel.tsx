@@ -1,10 +1,12 @@
 import type { Transaction } from '@/lib/parser/types';
 import { summariseCharges } from '@/lib/analysis/summarise-charges';
 import { formatKsh } from './format';
+import { Panel } from './panel';
 
 /**
- * The single number most people have never seen. It gets the darkest surface
- * on the page and the largest type — nothing else competes for that role.
+ * What the fees came to. Still the number most people have never added up, so
+ * it keeps the orange it has everywhere else — but it is one panel of the
+ * report now rather than its headline.
  */
 export function ChargesPanel({ transactions }: { transactions: Transaction[] }) {
   const charges = summariseCharges(transactions);
@@ -14,7 +16,6 @@ export function ChargesPanel({ transactions }: { transactions: Transaction[] }) 
   }
 
   const stats = [
-    { label: 'Charges', value: String(charges.chargeCount) },
     { label: 'Average', value: formatKsh(charges.averageChargeInCents) },
     { label: 'Largest', value: formatKsh(charges.largestChargeInCents) },
     ...(charges.shareOfSpendingPercent !== null
@@ -23,34 +24,30 @@ export function ChargesPanel({ transactions }: { transactions: Transaction[] }) 
   ];
 
   return (
-    <section className="rounded-lg bg-surface-deep p-6 text-primary-foreground sm:p-8">
-      <h3 className="eyebrow flex items-center gap-2 text-primary-foreground/60">
-        <span aria-hidden className="text-accent-bright">
-          ■
-        </span>
-        What M-PESA charged you
-      </h3>
+    <Panel
+      title="What M-PESA charged you"
+      aside={`${charges.chargeCount} ${charges.chargeCount === 1 ? 'charge' : 'charges'}`}
+    >
+      <p className="tabular text-3xl font-semibold text-accent">
+        {formatKsh(charges.totalChargesInCents)}
+      </p>
+      {/*
+        Only transfer and paybill charges are recognised on real statements
+        so far, so this says "recorded as charges" rather than naming kinds
+        of fee it may not have seen.
+      */}
+      <p className="mt-1 text-sm text-muted-foreground">
+        The fees recorded as charges on this statement, added up.
+      </p>
 
-      <div className="mt-4 flex flex-wrap items-end justify-between gap-x-10 gap-y-6">
-        <div>
-          <p className="tabular text-4xl font-semibold text-accent-bright sm:text-6xl">
-            {formatKsh(charges.totalChargesInCents)}
-          </p>
-          <p className="mt-2 max-w-sm text-sm text-primary-foreground/60">
-            Tariffs, paybill commissions and withdrawal fees, added up across the whole
-            statement.
-          </p>
-        </div>
-
-        <dl className="grid grid-cols-2 gap-x-10 gap-y-5 sm:grid-cols-4">
-          {stats.map(stat => (
-            <div key={stat.label}>
-              <dt className="eyebrow text-primary-foreground/50">{stat.label}</dt>
-              <dd className="tabular mt-1 text-xl font-medium">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
-    </section>
+      <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
+        {stats.map(stat => (
+          <div key={stat.label}>
+            <dt className="eyebrow text-muted-foreground">{stat.label}</dt>
+            <dd className="tabular mt-1 font-medium">{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Panel>
   );
 }

@@ -17,6 +17,17 @@ export interface MoneyFlowSummary {
   revenueInCents: number;
   /** Money that moved without being spent — savings, float, deposits. */
   cashMovementInCents: number;
+  /**
+   * The part of money in that was not income: cash you deposited yourself,
+   * Fuliza loans and reversals. Shown beside money in so the larger figure
+   * does not read as earnings.
+   */
+  depositsLoansAndReversalsInCents: number;
+  /**
+   * The part of money out that went into savings (unit trusts) rather than
+   * being spent. Shown beside money out for the same reason.
+   */
+  movedToSavingsInCents: number;
 }
 
 /**
@@ -82,13 +93,23 @@ export function summariseMoneyFlow(transactions: Transaction[]): MoneyFlowSummar
     )
   );
 
+  const depositsLoansAndReversalsInCents = sumAmounts(
+    incoming.filter(transaction => NON_REVENUE_INFLOWS.includes(transaction.type))
+  );
+
+  const movedToSavingsInCents = sumAmounts(
+    outgoing.filter(transaction => transaction.type === 'unit_trust_investment')
+  );
+
   return {
     totalInInCents,
     totalOutInCents,
     netInCents: totalInInCents - totalOutInCents,
     spendingByCategory,
     revenueInCents,
-    cashMovementInCents
+    cashMovementInCents,
+    depositsLoansAndReversalsInCents,
+    movedToSavingsInCents
   };
 }
 

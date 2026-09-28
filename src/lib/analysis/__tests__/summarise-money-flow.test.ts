@@ -112,4 +112,33 @@ describe('summariseMoneyFlow', () => {
     expect(summary.totalInInCents).toBe(0);
     expect(summary.spendingByCategory).toEqual([]);
   });
+  it('separates deposits, loans and reversals from the rest of money in', () => {
+    const summary = summariseMoneyFlow([
+      buildTransaction({ type: 'payment_received', direction: 'in', amount: 300000 }),
+      buildTransaction({ type: 'agent_deposit', direction: 'in', amount: 200000 }),
+      buildTransaction({ type: 'fuliza_loan', direction: 'in', amount: 50000 }),
+      buildTransaction({ type: 'reversal', direction: 'in', amount: 10000 })
+    ]);
+
+    expect(summary.totalInInCents).toBe(560000);
+    expect(summary.depositsLoansAndReversalsInCents).toBe(260000);
+    // The two always account for all of money in between them.
+    expect(summary.depositsLoansAndReversalsInCents + summary.revenueInCents).toBe(
+      summary.totalInInCents
+    );
+  });
+
+  it('counts only unit trust investments as moved to savings', () => {
+    const summary = summariseMoneyFlow([
+      buildTransaction({
+        type: 'unit_trust_investment',
+        direction: 'out',
+        amount: 100000
+      }),
+      buildTransaction({ type: 'agent_withdrawal', direction: 'out', amount: 70000 }),
+      buildTransaction({ type: 'send_money', direction: 'out', amount: 40000 })
+    ]);
+
+    expect(summary.movedToSavingsInCents).toBe(100000);
+  });
 });
