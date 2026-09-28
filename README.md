@@ -4,19 +4,39 @@ Reads a Safaricom M-PESA statement PDF in your browser and shows where your mone
 
 ## Screenshots
 
-<!-- TODO: add screenshots -->
+<!--
+  Save each image in docs/screenshots/ under the name used below.
 
-|                    |                    |
-| ------------------ | ------------------ |
-| _Upload screen_    | _Statement report_ |
-| _Saved statements_ | _Dark mode_        |
+  - Sample statements only. A real statement puts names, amounts and phone
+    numbers on screen.
+  - Home: the page as it first loads, desktop width, light mode.
+  - Report: "Try a sample statement", the top of the report.
+  - Saved: "Delete all my data" first, save both samples, then open /saved.
+  - Desktop window about 1440px wide. Chrome: DevTools, Cmd+Shift+P,
+    "Capture screenshot".
+  - PNG, under about 500 KB each.
+-->
+
+**Home page**
+
+![The home page, with the upload box beside a preview of the report](docs/screenshots/home.png)
+
+**Statement report**
+
+![A statement report: money in and out, fees, spending by category, and the transactions](docs/screenshots/report.png)
+
+**Saved statements**
+
+![Saved statements in this browser, with a date filter and one report across all of them](docs/screenshots/saved.png)
 
 ## What it does
 
 - Opens password-protected M-PESA statement PDFs without uploading them anywhere.
 - Turns the statement table into typed transactions, across 16 transaction types.
-- Checks every printed running balance, and reports any row that does not add up.
+- Shows money in and money out, and points out the parts that were not income or spending: cash you deposited, Fuliza loans, reversals and money moved to savings.
 - Breaks spending down by category, counterparty, fees and time of day.
+- Checks every printed running balance, and explains anything that does not add up in plain language — keeping what needs your attention apart from notes that mean nothing is wrong.
+- Gives the report its own page, so the address and the Back button work as you would expect.
 - Exports transactions and parsing issues as CSV.
 - Optionally saves statements in your browser so you do not have to open the file again.
 - Merges overlapping statements without duplicating rows, and links a fee to a payment in an earlier statement.
@@ -57,7 +77,7 @@ No server, no database, no environment variables.
 
 ## Design decisions
 
-**Everything runs in the browser.** The PDF and its password are read in the tab and never sent anywhere. There is no upload endpoint, because there is no server — the site is static files. The only network request the app makes is fetching the sample statements from its own `public/` folder. You can check this in the Network tab.
+**Everything runs in the browser.** The PDF and its password are read in the tab and never sent anywhere. There is no upload endpoint, because there is no server — the site is static files. Apart from loading its own files — the pages, their scripts and the pdf.js worker — the only request the app makes is for the sample statements in its own `public/` folder. Nothing goes to any other address. You can check this in the Network tab.
 
 **Storage is local-first.** Saving is opt-in, and saved statements go to IndexedDB in your browser. Nothing syncs, which means a new browser starts empty — so there is a backup you can export as JSON and import again. Imports are validated with Zod and carry a schema version, so a file from a future version is refused rather than half-read.
 
@@ -85,7 +105,7 @@ The rest, briefly:
 | `font-src 'self'`                                                                      | `next/font` downloads Google Fonts at build time and serves them locally, so nothing is fetched from Google at runtime. |
 | `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'` | No plugins, no rewriting relative URLs, no posting elsewhere, no framing.                                               |
 
-`script-src` and `style-src` allow `'unsafe-inline'`. The strict alternative is a per-request nonce, which needs middleware and would make every route dynamic — losing static delivery. For four static pages that never render user content as HTML, that trade is worth making.
+`script-src` and `style-src` allow `'unsafe-inline'`. The strict alternative is a per-request nonce, which needs middleware and would make every route dynamic — losing static delivery. For a site of static pages that never render user content as HTML, that trade is worth making.
 
 `script-src` also allows `'wasm-unsafe-eval'`, because the pdf.js worker instantiates WebAssembly for its image decoders. That directive permits WebAssembly compilation and nothing else — JavaScript `eval()` and `new Function()` stay blocked. Plain `'unsafe-eval'` is added in development only, where the dev server needs it for fast refresh, and is absent from production builds.
 
@@ -110,7 +130,7 @@ No statement to hand? The upload screen has two sample statements built from ent
 npm test
 ```
 
-178 tests across 18 files, covering the parser, the analysis, CSV export, browser storage, and backup import and export. They run in about a second. None of them needs a real PDF, a server or a database — IndexedDB is faked, and the one component test renders into a simulated DOM.
+225 tests across 22 files, covering the parser, the analysis, the plain-language issue explanations, CSV export, browser storage, backup import and export, and the report screens. They run in about a second. None of them needs a real PDF, a server or a database — IndexedDB is faked, and the tests that render components use a simulated DOM.
 
 ## Other commands
 
